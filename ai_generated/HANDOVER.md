@@ -21,17 +21,21 @@ output_system/
 │       ├── app/
 │       │   ├── api/auth/[...nextauth]/route.ts  # NextAuth.jsルートハンドラー
 │       │   ├── api/auth/session-info/route.ts   # セッション情報API
-│       │   ├── login/page.tsx                   # ログイン画面
-│       │   ├── my-access/page.tsx
-│       │   └── page.tsx                         # /→/loginまたは/my-accessリダイレクト
+│       │   ├── api/auth/keycloak-logout/route.ts # KeyCloak完全ログアウトAPI
+│       │   ├── login/page.tsx                   # ログイン画面（ロール別リダイレクト対応）
+│       │   ├── my-access/page.tsx               # 一般社員向け画面（MainLayout適用）
+│       │   ├── admin/users/page.tsx             # 管理者向けユーザー一覧画面（MainLayout適用）
+│       │   └── page.tsx                         # /→ロール別リダイレクト（管理者→/admin/users, 一般→/my-access）
 │       ├── components/
 │       │   ├── auth/LoginButton.tsx             # signIn('keycloak')ボタン
+│       │   ├── layout/header.tsx                # 共通ヘッダー（タイトル・ユーザー名・ログアウトボタン）
+│       │   ├── layout/main-layout.tsx           # ヘッダー+メインコンテンツのレイアウト
 │       │   ├── providers/SessionProvider.tsx    # NextAuth SessionProviderラッパー
 │       │   └── ui/button.tsx                    # shadcn/ui互換ボタン
 │       ├── lib/
 │       │   ├── auth.ts                          # NextAuth設定（JWTリフレッシュ含む）
 │       │   └── utils.ts                         # cn()ユーティリティ
-│       ├── middleware.ts                        # /my-access, /admin を認証保護
+│       ├── middleware.ts                        # ロールベース認証ミドルウェア（/admin/*は管理者のみ）
 │       └── types/next-auth.d.ts                 # Session/JWT型拡張
 ├── backend/
 │   ├── pom.xml                 # spring-boot-starter-actuator追加済み
@@ -59,7 +63,9 @@ docker compose up -d
 - bearerOnly廃止: KeyCloak 26.xでbearerOnlyが廃止。代わりにstandardFlowEnabled:falseで代替
 - JWTリフレッシュバッファ60秒: 有効期限の60秒前にリフレッシュを開始。エラー時はRefreshAccessTokenErrorをセッションに伝播
 - isAdmin flag: JWTのrealm_access.rolesにpaas-adminが含まれる場合true。リフレッシュ時にも再取得
-- Spring SecurityのpermitAllは不完全: BearerTokenAuthenticationFilterがpermitAllより先に動作する。別FilterChainで解決が必要
+- withAuth採用（middleware.ts）: NextAuth.jsのwithAuthでミドルウェアをラップ。req.nextauth.tokenでJWTが自動取得できる
+- KeyCloak完全ログアウト: signOut後に/api/auth/keycloak-logout経由でKeyCloakのend_session_endpointにリダイレクト
+- MainLayout: 認証済みページ共通のヘッダー+コンテンツレイアウト。HeaderはClient Component（useSession使用）
 
 ## はまりポイント
 - JWT型インポート: `next-auth`からJWTはエクスポートされない。`next-auth/jwt`から取得
@@ -71,3 +77,4 @@ docker compose up -d
 - PBI #4: docker compose upで全4サービス（frontend/backend/postgres/keycloak）が起動する基盤
 - PBI #5: DBスキーマとシードデータ自動投入（Flyway V1/V2, JPA Entity/Repository）
 - PBI #6: KeyCloak OIDCでログインできる（NextAuth.js JWT策略、8時間セッション、トークン自動リフレッシュ）
+- PBI #7: ロールに応じた画面遷移とログアウト（withAuth middleware、ロール別リダイレクト、共通ヘッダー）
