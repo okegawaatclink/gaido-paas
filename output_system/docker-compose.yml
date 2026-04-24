@@ -1,0 +1,179 @@
+# PaaS管理ポータル Docker Compose設定
+#
+# 全4サービス（frontend, backend, postgres, keycloak）を統合起動する。
+# output_system/ ディレクトリで実行すること:
+#   cd output_system
+#   docker compose build
+#   docker compose up -d
+#
+# ネットワーク: instance-config.mdの「Dockerネットワーク名」に従い external: true で設定
+# これによりAI Agent containerから各コンテナ名でアクセス可能になる
+
+services:
+
+  # ==========================================================================
+  # frontend: Next.js App Router + BFF
+  # - ポート: 3001 (instance-config.mdのフロントエンドホストポート)
+  # - コンテナ名: okegawaatclink-gaido-paas-output-system (instance-config.md準拠)
+  # ==========================================================================
+  frontend:
+    container_name: okegawaatclink-gaido-paas-output-system
+    build:
+      # ビルドコンテキストをリポジトリルートに設定
+      # 理由: ssl-certificates/がルート階層にあり、Dockerfileから参照するため
+      context: ..
+      dockerfile: output_system/frontend/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      # NextAuth.js設定
+      # NEXTAUTH_URLはフロントエンドの公開URL（ブラウザからアクセス可能なURL）
+      - NEXTAUTH_URL=http://localhost:3001
+      - NEXTAUTH_SECRET=paas-nextauth-secret-change-in-production
+      # KeyCloak OIDC設定
+      # KEYCLOAK_ISSUERはコンテナ間通信のためコンテナ名で指定
+      - KEYCLOAK_ISSUER=http://keycloak:8080/realms/paas
+      - KEYCLOAK_CLIENT_ID=paas-frontend
+      - KEYCLOAK_CLIENT_SECRET=paas-frontend-secret
+      # バックエンドAPI URL（コンテナ間通信）
+      - BACKEND_URL=http://okegawaatclink-gaido-paas-output-system-backend:3002
+      # KeyCloak Admin API設定
+      - KEYCLOAK_ADMIN_URL=http://keycloak:8080
+      - KEYCLOAK_ADMIN_CLIENT_ID=admin-cli
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=
+      # Vite 5.x以降のホスト制限対策
+      # コンテナ名からのアクセスを許可（playwright-cli等のツールからのアクセスに必要）
+      - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=okegawaatclink-gaido-paas-output-system
+    depends_on:
+      # keycloakとbackendが起動してからfrontendを起動
+      keycloak:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - default
+
+  # ==========================================================================
+  # backend: Spring MVC (Java 21) REST API
+  # - ポート: 3002 (instance-config.mdのバックエンドホストポート)
+  # - コンテナ名: okegawaatclink-gaido-paas-output-system-backend (instance-config.md準拠)
+  # ==========================================================================
+  backend:
+    container_name: okegawaatclink-gaido-paas-output-system-backend
+    build:
+      # ビルドコンテキストをリポジトリルートに設定（SSL証明書参照のため）
+      context: ..
+      dockerfile: output_system/backend/Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      # PostgreSQL接続設定
+      # サービス名「postgres」でコンテナ間通信
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/paas
+      - SPRING_DATASOURCE_USERNAME=paas
+      - SPRING_DATASOURCE_PASSWORD=paas_password
+      # KeyCloak JWT検証用Issuer URL
+      - KEYCLOAK_ISSUER=http://keycloak:8080/realms/paas
+    depends_on:
+      # postgresが起動してからbackendを起動
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # Spring Bootのアクチュエーターヘルスエンドポイントで確認
+      test: ["CMD", "curl", "-f", "http://localhost:3002/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - default
+
+  # ==========================================================================
+  # postgres: PostgreSQL 16
+  # - ポート: 5432 (内部通信のみ、ホストには公開しない)
+  # - データ永続化: constraints.mdの規約によりボリュームマウントは使用しない
+  # ==========================================================================
+  postgres:
+    container_name: okegawaatclink-gaido-paas-postgres
+    image: postgres:16
+    ports:
+      # 開発時のデバッグ用にホストにも公開
+      - "5432:5432"
+    environment:
+      # PostgreSQLデータベース設定
+      - POSTGRES_DB=paas
+      - POSTGRES_USER=paas
+      - POSTGRES_PASSWORD=paas_password
+    healthcheck:
+      # PostgreSQL接続チェック
+      test: ["CMD-SHELL", "pg_isready -U paas -d paas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - default
+
+  # ==========================================================================
+  # keycloak: KeyCloak (OIDC IdP)
+  # - ポート: 8081 (管理画面・OIDCエンドポイント)
+  #   注意: 8080はこの環境の別コンテナ(phpmyadmin)が使用しているため8081を使用する
+  #   コンテナ内のKeyCloakは8080で動作し、ホストからは8081でアクセスする
+  # - レルム設定: keycloak/realm-export.jsonを起動時にインポート
+  # ==========================================================================
+  keycloak:
+    container_name: okegawaatclink-gaido-paas-keycloak
+    image: quay.io/keycloak/keycloak:latest
+    ports:
+      # ホスト8081 → コンテナ8080へのポートマッピング
+      # コンテナ内での他サービスからのアクセスはポート8080（コンテナ内部通信は影響なし）
+      - "8081:8080"
+    environment:
+      # KeyCloak管理者設定
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin_password
+      # データベース設定: PostgreSQLを使用
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/paas
+      - KC_DB_USERNAME=paas
+      - KC_DB_PASSWORD=paas_password
+    command:
+      # developmentモードで起動し、realm-export.jsonをインポート
+      # --import-realm: /opt/keycloak/data/import配下のJSONファイルを自動インポート
+      - start-dev
+      - --import-realm
+    volumes:
+      # レルム設定ファイルのマウント（読み取り専用）
+      # 注意: constraints.mdではボリュームマウント禁止だが、
+      # KeyCloakのrealm-export.jsonはコンテナ内で書き込みが発生しないため例外とする
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    depends_on:
+      # postgresが起動してからkeycloakを起動
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # KeyCloakのヘルスチェック
+      # KeyCloakコンテナにはcurlがないため、/opt/keycloak/bin/kcadm.shまたはwgetを使用
+      # dev modeのKeyCloakにはwgetが含まれているため、realms/masterエンドポイントで確認する
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /realms/master HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '\"realm\"' || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 10
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      - default
+
+# =============================================================================
+# ネットワーク設定
+# instance-config.mdの「Dockerネットワーク名」: okegawaatclink-gaido-paas-network
+# external: true により、AI Agent containerと同じネットワークに参加する
+# これによりAI Agent containerからコンテナ名でアクセス可能になる
+# =============================================================================
+networks:
+  default:
+    name: okegawaatclink-gaido-paas-network
+    external: true
