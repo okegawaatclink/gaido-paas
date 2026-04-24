@@ -78,3 +78,4 @@ docker compose up -d
 - PBI #5: DBスキーマとシードデータ自動投入（Flyway V1/V2, JPA Entity/Repository）
 - PBI #6: KeyCloak OIDCでログインできる（NextAuth.js JWT策略、8時間セッション、トークン自動リフレッシュ）
 - PBI #7: ロールに応じた画面遷移とログアウト（withAuth middleware、ロール別リダイレクト、共通ヘッダー）
+- PBI #8: 管理者がユーザー一覧を表示・検索できる（REST API + BFFプロキシ + ユーザー一覧画面）

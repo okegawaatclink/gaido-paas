@@ -1,9 +1,13 @@
 package com.example.paas.repository;
 
 import com.example.paas.model.User;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -15,6 +19,10 @@ import java.util.Optional;
  *
  * <p>カスタムクエリメソッドはメソッド名からSpring Data JPAがSQLを自動生成する
  * （例: findByEmployeeId → SELECT * FROM users WHERE employee_id = ?）。</p>
+ *
+ * <p>N+1問題の回避:
+ * ユーザー一覧取得時はcloudAccessesを一括でfetch joinするため、
+ * @EntityGraph(attributePaths = {"cloudAccesses"}) を付与したメソッドを使用する。</p>
  */
 @Repository
 public interface UserRepository extends CrudRepository<User, Long> {
@@ -50,4 +58,41 @@ public interface UserRepository extends CrudRepository<User, Long> {
      * @return 該当するユーザーリスト
      */
     Iterable<User> findByIsAdmin(boolean isAdmin);
+
+    /**
+     * 全ユーザーをcloudAccesses付きで取得する（N+1問題回避）
+     *
+     * <p>@Query + @EntityGraph により cloudAccesses を LEFT JOIN FETCH で一括取得する。
+     * これにより、N件のユーザーに対してN回のSQLが発行されるN+1問題を防ぐ。
+     * ユーザー一覧API（GET /api/users）で使用する。</p>
+     *
+     * <p>メソッド名はSpring Data JPAのクエリ生成対象外にするため、
+     * 明示的に @Query を指定する。</p>
+     *
+     * @return 全ユーザーのリスト（各ユーザーのcloudAccessesが初期化済み）
+     */
+    @EntityGraph(attributePaths = {"cloudAccesses"})
+    @Query("SELECT u FROM User u")
+    List<User> findAllWithCloudAccesses();
+
+    /**
+     * キーワードで部分一致検索を行い、cloudAccesses付きでユーザーを取得する
+     *
+     * <p>社員ID・氏名・部署でOR条件の大文字小文字を無視した部分一致検索を行う。
+     * @EntityGraph により cloudAccesses を LEFT JOIN FETCH で一括取得する。</p>
+     *
+     * <p>検索条件: employee_id ILIKE %keyword% OR name ILIKE %keyword% OR department ILIKE %keyword%
+     * ※ PostgreSQLのILIKEを使用して大文字小文字を区別しない検索を実現する。</p>
+     *
+     * <p>ユーザー検索API（GET /api/users/search?q=xxx）で使用する。</p>
+     *
+     * @param keyword 検索キーワード（部分一致、大文字小文字を区別しない）
+     * @return 検索結果のユーザーリスト（各ユーザーのcloudAccessesが初期化済み）
+     */
+    @EntityGraph(attributePaths = {"cloudAccesses"})
+    @Query("SELECT u FROM User u WHERE " +
+           "LOWER(u.employeeId) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.department) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<User> searchByKeywordWithCloudAccesses(@Param("keyword") String keyword);
 }
