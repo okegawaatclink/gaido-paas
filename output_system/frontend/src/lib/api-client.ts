@@ -175,3 +175,68 @@ export async function searchUsers(keyword: string): Promise<UserResponse[]> {
   const encodedKeyword = encodeURIComponent(keyword);
   return proxyFetch<UserResponse[]>(`/api/proxy/users/search?q=${encodedKeyword}`);
 }
+
+/**
+ * IDでユーザー詳細を取得する
+ *
+ * BFFプロキシ経由でバックエンドの GET /api/users/{id} を呼び出す。
+ * ユーザー情報（社員ID・氏名・メール・部署・役職）とCloudAccess情報を返す。
+ *
+ * @param id ユーザーのID
+ * @returns ユーザー詳細（CloudAccess付き）
+ * @throws {ApiError} API呼び出しに失敗した場合（404: ユーザー不在等）
+ *
+ * @example
+ * const user = await getUserById(1);
+ * console.log(user.name); // "田中 太郎"
+ */
+export async function getUserById(id: number): Promise<UserResponse> {
+  return proxyFetch<UserResponse>(`/api/proxy/users/${id}`);
+}
+
+/**
+ * Cloud利用可否更新リクエストの型定義
+ *
+ * api.mdのOpenAPI定義のCloudAccessUpdateRequestスキーマに対応する。
+ */
+export type CloudAccessUpdateRequest = {
+  /** Cloud利用可否の更新リスト */
+  cloudAccess: Array<{
+    /** クラウドプロバイダー名（"AWS" | "GCP" | "Azure"） */
+    cloudProvider: "AWS" | "GCP" | "Azure";
+    /** アクセス権の有効/無効フラグ */
+    isEnabled: boolean;
+  }>;
+};
+
+/**
+ * Cloud利用可否を更新する
+ *
+ * BFFプロキシ経由でバックエンドの PUT /api/users/{id}/cloud-access を呼び出す。
+ * リクエストで指定されたCloudAccess設定でDBを更新し、更新後のユーザー詳細を返す。
+ * BFFレイヤーでKeyCloak Admin APIを使ってロールも同期される。
+ *
+ * @param id ユーザーのID
+ * @param request Cloud利用可否更新リクエスト
+ * @returns 更新後のユーザー詳細（CloudAccess付き）
+ * @throws {ApiError} API呼び出しに失敗した場合（404: ユーザー不在、400: バリデーションエラー等）
+ *
+ * @example
+ * const updated = await updateCloudAccess(1, {
+ *   cloudAccess: [
+ *     { cloudProvider: "AWS", isEnabled: true },
+ *     { cloudProvider: "GCP", isEnabled: false },
+ *     { cloudProvider: "Azure", isEnabled: true },
+ *   ]
+ * });
+ * console.log(updated.cloudAccess[0].isEnabled); // true
+ */
+export async function updateCloudAccess(
+  id: number,
+  request: CloudAccessUpdateRequest
+): Promise<UserResponse> {
+  return proxyFetch<UserResponse>(`/api/proxy/users/${id}/cloud-access`, {
+    method: "PUT",
+    body: JSON.stringify(request),
+  });
+}
