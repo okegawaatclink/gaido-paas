@@ -10,13 +10,11 @@
   "resetPasswordAllowed": true,
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
-
   "accessTokenLifespan": 300,
   "ssoSessionMaxLifespan": 28800,
   "ssoSessionIdleTimeout": 28800,
   "accessCodeLifespan": 60,
   "accessCodeLifespanUserAction": 300,
-
   "clients": [
     {
       "clientId": "paas-frontend",
@@ -75,7 +73,6 @@
       "authorizationServicesEnabled": false
     }
   ],
-
   "roles": {
     "realm": [
       {
@@ -85,10 +82,21 @@
       {
         "name": "paas-user",
         "description": "PaaS一般ユーザーロール: 自分のアクセス権の閲覧のみ可能"
+      },
+      {
+        "name": "paas-aws-user",
+        "description": "AWSを利用できるユーザーロール"
+      },
+      {
+        "name": "paas-gcp-user",
+        "description": "GCPを利用できるユーザーロール"
+      },
+      {
+        "name": "paas-azure-user",
+        "description": "Azureを利用できるユーザーロール"
       }
     ]
   },
-
   "users": [
     {
       "username": "tanaka.admin",
@@ -104,11 +112,20 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["paas-admin", "paas-user"],
+      "realmRoles": [
+        "paas-admin",
+        "paas-user"
+      ],
       "attributes": {
-        "employee_id": ["E001"],
-        "department": ["情報システム部"],
-        "position": ["システム管理者"]
+        "employee_id": [
+          "E001"
+        ],
+        "department": [
+          "情報システム部"
+        ],
+        "position": [
+          "システム管理者"
+        ]
       }
     },
     {
@@ -125,11 +142,19 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["paas-user"],
+      "realmRoles": [
+        "paas-user"
+      ],
       "attributes": {
-        "employee_id": ["E002"],
-        "department": ["営業部"],
-        "position": ["主任"]
+        "employee_id": [
+          "E002"
+        ],
+        "department": [
+          "営業部"
+        ],
+        "position": [
+          "主任"
+        ]
       }
     },
     {
@@ -146,11 +171,19 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["paas-user"],
+      "realmRoles": [
+        "paas-user"
+      ],
       "attributes": {
-        "employee_id": ["E003"],
-        "department": ["開発部"],
-        "position": ["エンジニア"]
+        "employee_id": [
+          "E003"
+        ],
+        "department": [
+          "開発部"
+        ],
+        "position": [
+          "エンジニア"
+        ]
       }
     },
     {
@@ -167,11 +200,19 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["paas-user"],
+      "realmRoles": [
+        "paas-user"
+      ],
       "attributes": {
-        "employee_id": ["E004"],
-        "department": ["人事部"],
-        "position": ["担当"]
+        "employee_id": [
+          "E004"
+        ],
+        "department": [
+          "人事部"
+        ],
+        "position": [
+          "担当"
+        ]
       }
     }
   ]
