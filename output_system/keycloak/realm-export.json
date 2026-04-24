@@ -1,0 +1,60 @@
+{
+  "id": "paas",
+  "realm": "paas",
+  "displayName": "PaaS管理ポータル",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "clients": [
+    {
+      "clientId": "paas-frontend",
+      "name": "PaaS Frontend",
+      "description": "Next.js BFFクライアント",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "paas-frontend-secret",
+      "redirectUris": [
+        "http://localhost:3001/*",
+        "http://okegawaatclink-gaido-paas-output-system:3001/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3001",
+        "http://okegawaatclink-gaido-paas-output-system:3001"
+      ],
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    },
+    {
+      "clientId": "paas-backend",
+      "name": "PaaS Backend",
+      "description": "Spring MVC Resource Serverクライアント",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "paas-backend-secret",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "bearerOnly": true
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "paas-admin",
+        "description": "PaaS管理者ロール: ユーザー管理・アクセス権変更が可能"
+      },
+      {
+        "name": "paas-user",
+        "description": "PaaS一般ユーザーロール: 自分のアクセス権の閲覧のみ可能"
+      }
+    ]
+  }
+}

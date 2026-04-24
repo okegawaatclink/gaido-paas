@@ -1,0 +1,52 @@
+.box/
+
+# Pockode internal files
+.pockode/
+
+# Environment / secrets
+.env
+.env.*
+*.local
+
+# Node.js
+node_modules/
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test results
+coverage/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Temp files
+*.tmp
+*.temp
+
+# MCP
+.mcp.json
+
