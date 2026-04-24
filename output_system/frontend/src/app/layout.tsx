@@ -3,9 +3,12 @@
  *
  * Next.js App Routerのルートレイアウト。
  * 全ページに共通するHTMLの骨格とグローバルスタイルを定義する。
+ * SessionProviderでラップすることで全クライアントコンポーネントで
+ * useSession()フックが使用できるようになる。
  */
 import type { Metadata } from "next";
 import "./globals.css";
+import { SessionProvider } from "@/components/providers/SessionProvider";
 
 export const metadata: Metadata = {
   title: "PaaS管理ポータル",
@@ -23,7 +26,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body>
+        {/* SessionProviderでラップ: useSession()をアプリ全体で使用可能にする */}
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }

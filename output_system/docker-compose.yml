@@ -38,9 +38,10 @@ services:
       # バックエンドAPI URL（コンテナ間通信）
       - BACKEND_URL=http://okegawaatclink-gaido-paas-output-system-backend:3002
       # KeyCloak Admin API設定
+      # paas-management-adminクライアント（サービスアカウント有効、realm-management権限付与）
       - KEYCLOAK_ADMIN_URL=http://keycloak:8080
-      - KEYCLOAK_ADMIN_CLIENT_ID=admin-cli
-      - KEYCLOAK_ADMIN_CLIENT_SECRET=
+      - KEYCLOAK_ADMIN_CLIENT_ID=paas-management-admin
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=paas-admin-secret
       # Vite 5.x以降のホスト制限対策
       # コンテナ名からのアクセスを許可（playwright-cli等のツールからのアクセスに必要）
       - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=okegawaatclink-gaido-paas-output-system

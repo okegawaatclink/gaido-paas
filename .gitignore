@@ -50,3 +50,7 @@ playwright/.cache/
 # MCP
 .mcp.json
 
+# Docker Compose override (環境固有の設定)
+docker-compose.override.yml
+output_system/docker-compose.override.yml
+
