@@ -1,0 +1,57 @@
+# バックエンドAPI アプリケーション設定
+# 環境変数で上書き可能な設定値を定義する
+
+spring:
+  application:
+    name: paas-backend
+
+  # データソース設定: PostgreSQL接続情報
+  datasource:
+    # SPRING_DATASOURCE_URL環境変数で上書き（Docker Compose経由で設定）
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/paas}
+    username: ${SPRING_DATASOURCE_USERNAME:paas}
+    password: ${SPRING_DATASOURCE_PASSWORD:paas_password}
+    driver-class-name: org.postgresql.Driver
+
+  # JPA設定
+  jpa:
+    # Flywayでスキーマ管理するため、DDL自動生成は無効
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  # Flyway設定: DBマイグレーション管理
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # Spring Security OAuth2 Resource Server: KeyCloakのJWT検証
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # KEYCLOAK_ISSUERはdocker-compose.ymlで設定
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8080/realms/paas}
+
+# サーバーポート設定
+server:
+  port: 3002
+
+# springdoc-openapi設定: OpenAPI仕様書のエンドポイント
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# アクチュエーター設定: ヘルスチェックエンドポイント
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
