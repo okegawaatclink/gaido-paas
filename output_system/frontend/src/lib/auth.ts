@@ -9,7 +9,8 @@
  * - セッションタイムアウト: 8時間
  */
 
-import type { NextAuthOptions, JWT, Account } from "next-auth";
+import type { NextAuthOptions, Account } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import KeycloakProvider from "next-auth/providers/keycloak";
 
 /**

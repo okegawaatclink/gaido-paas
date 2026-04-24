@@ -91,6 +91,13 @@
       <version>${springdoc.version}</version>
     </dependency>
 
+    <!-- Spring Boot Actuator: ヘルスチェック・メトリクスエンドポイント -->
+    <!-- Docker ComposeのhealthcheckがGET /actuator/healthを使用するため必要 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
     <!-- テスト用依存 -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
