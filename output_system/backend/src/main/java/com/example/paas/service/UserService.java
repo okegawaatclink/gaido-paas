@@ -1,5 +1,6 @@
 package com.example.paas.service;
 
+import com.example.paas.dto.CloudAccessResponse;
 import com.example.paas.dto.CloudAccessUpdateRequest;
 import com.example.paas.dto.UserResponse;
 import com.example.paas.model.CloudAccess;
@@ -128,6 +129,62 @@ public class UserService {
 
         // UserエンティティをUserResponse DTOに変換して返す
         return UserResponse.from(user);
+    }
+
+    /**
+     * メールアドレスでユーザーをcloudAccess情報付きで取得する
+     *
+     * <p>GET /api/users/me で使用する。
+     * JWTの "email" クレームを使ってDBユーザーを特定するために使用する。
+     * ユーザーが存在しない場合は404 Not Foundをスローする。</p>
+     *
+     * @param email 検索するメールアドレス（JWTの "email" クレームから取得）
+     * @return ユーザー情報のUserResponse（cloudAccess付き）
+     * @throws ResponseStatusException ユーザーが存在しない場合（404）
+     */
+    public UserResponse findByEmail(String email) {
+        log.debug("メールアドレスでユーザー取得を開始する: email={}", email);
+
+        // メールアドレスでユーザーを検索する
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("ユーザーが見つからない: email={}", email);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "ユーザーが見つかりません: email=" + email);
+                });
+
+        // cloudAccessesを一括ロード（N+1問題回避）
+        // findByEmail はcloudAccessesをEager Loadしないため、IDで再取得する
+        User userWithCloudAccesses = userRepository.findByIdWithCloudAccesses(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "ユーザーが見つかりません: email=" + email));
+
+        log.debug("メールアドレスでユーザー取得完了: email={}, employeeId={}", email, userWithCloudAccesses.getEmployeeId());
+
+        return UserResponse.from(userWithCloudAccesses);
+    }
+
+    /**
+     * メールアドレスでユーザーのCloud利用可否リストを取得する
+     *
+     * <p>GET /api/users/me/cloud-access で使用する。
+     * JWTの "email" クレームを使ってDBユーザーを特定し、そのCloudAccess情報を返す。
+     * ユーザーが存在しない場合は404 Not Foundをスローする。</p>
+     *
+     * @param email 検索するメールアドレス（JWTの "email" クレームから取得）
+     * @return CloudAccessResponseのリスト（AWS/GCP/Azure各1件）
+     * @throws ResponseStatusException ユーザーが存在しない場合（404）
+     */
+    public List<CloudAccessResponse> findCloudAccessByEmail(String email) {
+        log.debug("メールアドレスでCloud利用可否取得を開始する: email={}", email);
+
+        // findByEmailを利用してUserResponseを取得し、その中のcloudAccessリストを返す
+        // cloudAccess情報を含むUserResponseを取得するためfindByEmailを再利用する
+        UserResponse userResponse = findByEmail(email);
+
+        log.debug("メールアドレスでCloud利用可否取得完了: email={}, 件数={}", email, userResponse.getCloudAccess().size());
+
+        return userResponse.getCloudAccess();
     }
 
     /**
