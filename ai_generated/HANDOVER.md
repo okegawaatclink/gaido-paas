@@ -90,3 +90,4 @@ docker compose up -d
 - PBI #7: ロールに応じた画面遷移とログアウト（withAuth middleware、ロール別リダイレクト、共通ヘッダー）
 - PBI #8: 管理者がユーザー一覧を表示・検索できる（REST API + BFFプロキシ + ユーザー一覧画面）
 - PBI #9: 管理者がCloud利用可否を付与・剥奪できる（ユーザー詳細画面 + Cloud利用可否更新API + KeyCloak Admin APIロール同期）
+- PBI #10: 一般社員が自分のCloud利用状況を確認できる（GET /api/users/me + GET /api/users/me/cloud-access + マイアクセス画面カード表示）
