@@ -31,16 +31,22 @@ output_system/
 │       │   ├── layout/header.tsx                # 共通ヘッダー（タイトル・ユーザー名・ログアウトボタン）
 │       │   ├── layout/main-layout.tsx           # ヘッダー+メインコンテンツのレイアウト
 │       │   ├── providers/SessionProvider.tsx    # NextAuth SessionProviderラッパー
-│       │   └── ui/button.tsx                    # shadcn/ui互換ボタン
+│       │   ├── ui/button.tsx                    # shadcn/ui互換ボタン
+│       │   ├── ui/card.tsx                      # Cardコンポーネント（shadcn/ui互換）
+│       │   ├── ui/switch.tsx                    # Switchコンポーネント（@radix-ui/react-switch使用）
+│       │   ├── ui/toast.tsx                     # Toastコンポーネント（カスタム通知）
+│       │   └── users/cloud-access-toggle.tsx    # CloudAccessToggleコンポーネント
 │       ├── lib/
 │       │   ├── auth.ts                          # NextAuth設定（JWTリフレッシュ含む）
+│       │   ├── keycloak-admin.ts                # KeyCloak Admin APIクライアント（サービスアカウント認証）
 │       │   └── utils.ts                         # cn()ユーティリティ
 │       ├── middleware.ts                        # ロールベース認証ミドルウェア（/admin/*は管理者のみ）
 │       └── types/next-auth.d.ts                 # Session/JWT型拡張
 ├── backend/
-│   ├── pom.xml                 # spring-boot-starter-actuator追加済み
+│   ├── pom.xml                 # spring-boot-starter-validation追加済み
 │   └── src/main/java/com/example/paas/
 │       ├── config/SecurityConfig.java           # Actuator認証不要, JWT認証設定
+│       ├── dto/CloudAccessUpdateRequest.java    # Cloud利用可否更新リクエストDTO（バリデーション付き）
 │       ├── model/User.java, CloudAccess.java
 │       └── repository/UserRepository.java, CloudAccessRepository.java
 └── keycloak/
@@ -66,12 +72,16 @@ docker compose up -d
 - withAuth採用（middleware.ts）: NextAuth.jsのwithAuthでミドルウェアをラップ。req.nextauth.tokenでJWTが自動取得できる
 - KeyCloak完全ログアウト: signOut後に/api/auth/keycloak-logout経由でKeyCloakのend_session_endpointにリダイレクト
 - MainLayout: 認証済みページ共通のヘッダー+コンテンツレイアウト。HeaderはClient Component（useSession使用）
+- KeyCloak Admin API同期: BFFレイヤーでCloud利用可否更新後にKeyCloak Admin API（Client Credentials Flow）でロールを同期。同期失敗はログのみ（最終的整合性）
+- Cloud利用可否ロール: paas-aws-user/paas-gcp-user/paas-azure-userをKeyCloakのrealm-export.jsonに追加。realm-export.jsonの変更はKeyCloakのDBに既に反映済みの場合は手動でAdmin APIから適用が必要
+- spring-boot-starter-validation: @ValidをControllerで使用するには依存関係に明示的追加が必要（Spring MVC単体では含まれない）
 
 ## はまりポイント
 - JWT型インポート: `next-auth`からJWTはエクスポートされない。`next-auth/jwt`から取得
 - Spring Security Actuator 401: BearerTokenAuthenticationFilterは.permitAll()より前に動作する。Actuator専用のFilterChain(@Order1)を作ること（/errorも含む）
 - pom.xmlにActuator依存不足: application.ymlにmanagement設定を書いてもArtifactが未追加だとエンドポイントが404になる
 - KeyCloak最初のimport失敗: KC 26.x ではINPUT_EXISTINGで初回起動時にpaasレルムが作成されなかった。Admin APIで手動インポート後はDB永続化されるため問題なし
+- KeyCloak Admin APIのロール同期: paas-aws-user等のロールがKeyCloakに未作成の場合、同期に失敗するがエラーログが出るだけ。realm-export.jsonを変更した後のロール作成はKeyCloakの初回起動時にのみ有効。既存環境では Admin API から手動作成が必要
 
 ## 実装済み機能
 - PBI #4: docker compose upで全4サービス（frontend/backend/postgres/keycloak）が起動する基盤
@@ -79,3 +89,4 @@ docker compose up -d
 - PBI #6: KeyCloak OIDCでログインできる（NextAuth.js JWT策略、8時間セッション、トークン自動リフレッシュ）
 - PBI #7: ロールに応じた画面遷移とログアウト（withAuth middleware、ロール別リダイレクト、共通ヘッダー）
 - PBI #8: 管理者がユーザー一覧を表示・検索できる（REST API + BFFプロキシ + ユーザー一覧画面）
+- PBI #9: 管理者がCloud利用可否を付与・剥奪できる（ユーザー詳細画面 + Cloud利用可否更新API + KeyCloak Admin APIロール同期）
