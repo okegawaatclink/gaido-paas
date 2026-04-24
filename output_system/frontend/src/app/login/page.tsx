@@ -7,25 +7,41 @@
  * - KeyCloakでログインボタン
  *
  * Server Componentとして実装し、ログインボタンのみClient Component（LoginButton）を使用する。
- * 認証済みユーザーがこのページにアクセスした場合は /my-access にリダイレクトする。
+ * 認証済みユーザーがこのページにアクセスした場合は、ロールに応じてリダイレクトする:
+ * - 管理者: /admin/users
+ * - 一般社員: /my-access
  */
 
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { LoginButton } from "@/components/auth/LoginButton";
+import type { Session } from "next-auth";
+
+/**
+ * セッション型拡張（isAdmin フラグを含む）
+ */
+type ExtendedSession = Session & {
+  isAdmin?: boolean;
+};
 
 /**
  * ログインページコンポーネント
  *
- * 認証済みユーザーは /my-access にリダイレクト。
+ * 認証済みユーザーは適切なページ（ロールに応じて）にリダイレクト。
  * 未認証ユーザーにはログイン画面を表示する。
  */
 export default async function LoginPage() {
-  // 認証済みの場合はリダイレクト
-  const session = await getServerSession(authOptions);
+  // 認証済みの場合はロールに応じてリダイレクト
+  const session = (await getServerSession(authOptions)) as ExtendedSession | null;
   if (session) {
-    redirect("/my-access");
+    if (session.isAdmin) {
+      // 管理者: ユーザー一覧画面へ
+      redirect("/admin/users");
+    } else {
+      // 一般社員: マイアクセス画面へ
+      redirect("/my-access");
+    }
   }
 
   return (
