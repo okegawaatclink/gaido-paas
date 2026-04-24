@@ -1,5 +1,6 @@
 package com.example.paas.controller;
 
+import com.example.paas.dto.CloudAccessUpdateRequest;
 import com.example.paas.dto.UserResponse;
 import com.example.paas.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,10 +12,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +36,8 @@ import java.util.List;
  * <ul>
  *   <li>GET /api/users - 全ユーザー一覧取得（cloudAccess付き）</li>
  *   <li>GET /api/users/search?q=xxx - ユーザー検索（社員ID・氏名・部署で部分一致）</li>
+ *   <li>GET /api/users/{id} - ユーザー詳細取得（cloudAccess付き）</li>
+ *   <li>PUT /api/users/{id}/cloud-access - Cloud利用可否更新</li>
  * </ul>
  *
  * <p>認証: OAuth2 JWTトークン必須（SecurityConfig.javaで制御）。
@@ -126,5 +133,96 @@ public class UserController {
 
         log.info("GET /api/users/search - 検索件数: {}, keyword={}", users.size(), q);
         return ResponseEntity.ok(users);
+    }
+
+    /**
+     * IDでユーザー詳細を取得する
+     *
+     * <p>GET /api/users/{id} に対応するエンドポイント。
+     * 指定されたIDのユーザー情報（社員ID・氏名・部署・CloudAccess）を返す。
+     * ユーザーが存在しない場合は404 Not Foundを返す。</p>
+     *
+     * @param id 取得するユーザーのID
+     * @return ユーザー詳細（CloudAccess付き）のResponseEntity
+     */
+    @GetMapping("/{id}")
+    @Operation(
+        summary = "ユーザー詳細取得",
+        description = "指定されたIDのユーザー情報をCloudAccess付きで取得する"
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "ユーザー詳細",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = UserResponse.class)
+            )
+        ),
+        @ApiResponse(responseCode = "401", description = "未認証"),
+        @ApiResponse(responseCode = "403", description = "権限不足"),
+        @ApiResponse(responseCode = "404", description = "ユーザー不在")
+    })
+    public ResponseEntity<UserResponse> getUserById(
+            @Parameter(description = "ユーザーID", required = true)
+            @PathVariable Long id) {
+
+        log.info("GET /api/users/{} - ユーザー詳細取得リクエスト", id);
+
+        UserResponse user = userService.findById(id);
+
+        log.info("GET /api/users/{} - ユーザー詳細取得完了: employeeId={}", id, user.getEmployeeId());
+        return ResponseEntity.ok(user);
+    }
+
+    /**
+     * Cloud利用可否を更新する
+     *
+     * <p>PUT /api/users/{id}/cloud-access に対応するエンドポイント。
+     * リクエストボディで指定されたCloudAccess設定でDBを更新し、更新後のユーザー詳細を返す。
+     * ユーザーが存在しない場合は404 Not Foundを返す。</p>
+     *
+     * <p>リクエストバリデーション:</p>
+     * <ul>
+     *   <li>cloudAccessは1件以上必要</li>
+     *   <li>cloudProviderはAWS/GCP/Azureのいずれか</li>
+     *   <li>isEnabledはnullでないこと</li>
+     * </ul>
+     *
+     * @param id ユーザーのID
+     * @param request Cloud利用可否更新リクエスト（バリデーション済み）
+     * @return 更新後のユーザー詳細（CloudAccess付き）のResponseEntity
+     */
+    @PutMapping("/{id}/cloud-access")
+    @Operation(
+        summary = "Cloud利用可否更新",
+        description = "指定されたユーザーのCloud利用可否を更新し、更新後のユーザー詳細を返す"
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "更新完了",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = UserResponse.class)
+            )
+        ),
+        @ApiResponse(responseCode = "400", description = "バリデーションエラー"),
+        @ApiResponse(responseCode = "401", description = "未認証"),
+        @ApiResponse(responseCode = "403", description = "権限不足"),
+        @ApiResponse(responseCode = "404", description = "ユーザー不在")
+    })
+    public ResponseEntity<UserResponse> updateCloudAccess(
+            @Parameter(description = "ユーザーID", required = true)
+            @PathVariable Long id,
+            @Valid @RequestBody CloudAccessUpdateRequest request) {
+
+        log.info("PUT /api/users/{}/cloud-access - Cloud利用可否更新リクエスト: {}件",
+                id, request.getCloudAccess().size());
+
+        UserResponse updatedUser = userService.updateCloudAccess(id, request);
+
+        log.info("PUT /api/users/{}/cloud-access - Cloud利用可否更新完了", id);
+        return ResponseEntity.ok(updatedUser);
     }
 }

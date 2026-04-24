@@ -98,6 +98,13 @@
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
 
+    <!-- Spring Boot Validation: @Valid, @NotNull, @Pattern等のBean Validationアノテーション有効化 -->
+    <!-- @Validをリクエストボディに付与するためにhibernate-validatorを含むこの依存が必要 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+
     <!-- テスト用依存 -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

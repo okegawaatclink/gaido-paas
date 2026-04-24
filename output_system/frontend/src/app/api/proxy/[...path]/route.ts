@@ -26,6 +26,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { syncCloudAccessToKeyCloak } from "@/lib/keycloak-admin";
 import type { Session } from "next-auth";
 
 /**
@@ -238,6 +239,11 @@ export async function POST(
  *
  * Cloud利用可否の更新（PUT /api/proxy/users/{id}/cloud-access）に対応する。
  *
+ * 処理フロー:
+ * 1. バックエンドにPUT /api/users/{id}/cloud-access をプロキシ転送
+ * 2. バックエンドのDB更新が成功した場合、KeyCloak Admin APIでロールを同期
+ * 3. KeyCloak同期失敗はログのみ（DB更新の成功を優先する）
+ *
  * @param request NextRequest
  * @param context ルートパラメータ（pathセグメントの配列）
  * @returns バックエンドのレスポンス
@@ -247,7 +253,91 @@ export async function PUT(
   context: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await context.params;
-  return handleProxy(request, path, "PUT");
+
+  // Cloud利用可否更新エンドポイントかどうかを判定する
+  // パスパターン: ["users", "{id}", "cloud-access"]
+  const isCloudAccessUpdate =
+    path.length === 3 &&
+    path[0] === "users" &&
+    path[2] === "cloud-access";
+
+  if (!isCloudAccessUpdate) {
+    // Cloud利用可否更新以外のPUTリクエストは通常プロキシ処理
+    return handleProxy(request, path, "PUT");
+  }
+
+  // Cloud利用可否更新: リクエストボディを事前に読み込んでKeyCloakにも渡す
+  // （handleProxyでrequestを読み込むとbodyが消費されるため事前に取得）
+  let requestBodyText: string;
+  try {
+    requestBodyText = await request.text();
+  } catch (error) {
+    console.error("Failed to read request body:", error);
+    return NextResponse.json(
+      { error: "Bad Request", message: "リクエストボディの読み込みに失敗しました" },
+      { status: 400 }
+    );
+  }
+
+  // リクエストボディを新しいRequestとして再構築してhandleProxyに渡す
+  const clonedRequest = new NextRequest(request.url, {
+    method: request.method,
+    headers: request.headers,
+    body: requestBodyText,
+  });
+
+  // バックエンドへプロキシ転送（DB更新）
+  const response = await handleProxy(clonedRequest, path, "PUT");
+
+  // DB更新成功時のみKeyCloak同期を実行する
+  if (response.status === 200) {
+    // リクエストボディを解析してCloud利用可否情報を取得する
+    let cloudAccessUpdates: Array<{ cloudProvider: string; isEnabled: boolean }> = [];
+    try {
+      const requestBody = JSON.parse(requestBodyText);
+      cloudAccessUpdates = requestBody.cloudAccess ?? [];
+    } catch (parseError) {
+      console.error("[KeyCloak Sync] Failed to parse request body:", parseError);
+    }
+
+    // レスポンスからユーザーのメールアドレスを取得する
+    let userEmail: string | null = null;
+    try {
+      const responseBodyText = await response.text();
+      const responseBody = JSON.parse(responseBodyText);
+      userEmail = responseBody.email ?? null;
+
+      // レスポンスを再構築する（bodyを読んでしまったため）
+      const rebuiltResponse = new NextResponse(responseBodyText, {
+        status: response.status,
+        headers: response.headers,
+      });
+
+      // KeyCloak同期を非同期で実行する（レスポンス返却後に実行）
+      // 同期の失敗はログ記録のみで、DB更新の成功を優先する
+      if (userEmail && cloudAccessUpdates.length > 0) {
+        // 非同期で同期を実行（awaitしない）
+        // 理由: KeyCloak同期の完了をクライアントに待たせないため（最終的整合性）
+        syncCloudAccessToKeyCloak(userEmail, cloudAccessUpdates).then((success) => {
+          if (success) {
+            console.log(`[KeyCloak Sync] Successfully synced cloud access for user: ${userEmail}`);
+          } else {
+            console.warn(`[KeyCloak Sync] Sync failed for user: ${userEmail} (DB update was successful)`);
+          }
+        }).catch((error) => {
+          console.error(`[KeyCloak Sync] Unexpected error during sync for user: ${userEmail}:`, error);
+        });
+      }
+
+      return rebuiltResponse;
+    } catch (parseError) {
+      // レスポンスボディの解析失敗: そのままレスポンスを返す
+      console.error("[KeyCloak Sync] Failed to parse response body:", parseError);
+      return response;
+    }
+  }
+
+  return response;
 }
 
 /**

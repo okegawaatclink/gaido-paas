@@ -1,12 +1,17 @@
 package com.example.paas.service;
 
+import com.example.paas.dto.CloudAccessUpdateRequest;
 import com.example.paas.dto.UserResponse;
+import com.example.paas.model.CloudAccess;
 import com.example.paas.model.User;
+import com.example.paas.repository.CloudAccessRepository;
 import com.example.paas.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +42,11 @@ public class UserService {
      * ユーザーリポジトリ（コンストラクタインジェクション）
      */
     private final UserRepository userRepository;
+
+    /**
+     * クラウドアクセスリポジトリ（コンストラクタインジェクション）
+     */
+    private final CloudAccessRepository cloudAccessRepository;
 
     /**
      * 全ユーザーをcloudAccess情報付きで取得する
@@ -90,5 +100,102 @@ public class UserService {
         return users.stream()
                 .map(UserResponse::from)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * IDでユーザー詳細をcloudAccess情報付きで取得する
+     *
+     * <p>GET /api/users/{id} で使用する。
+     * @EntityGraphを使用してcloudAccessesを一括ロードし、N+1問題を回避する。
+     * ユーザーが存在しない場合は404 Not Foundをスローする。</p>
+     *
+     * @param id 取得するユーザーのID
+     * @return ユーザー詳細のUserResponse（cloudAccess付き）
+     * @throws ResponseStatusException ユーザーが存在しない場合（404）
+     */
+    public UserResponse findById(Long id) {
+        log.debug("ユーザー詳細取得を開始する: id={}", id);
+
+        // cloudAccessesを一括ロード（N+1問題回避）
+        User user = userRepository.findByIdWithCloudAccesses(id)
+                .orElseThrow(() -> {
+                    log.warn("ユーザーが見つからない: id={}", id);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "ユーザーが見つかりません: id=" + id);
+                });
+
+        log.debug("ユーザー詳細取得完了: id={}, employeeId={}", id, user.getEmployeeId());
+
+        // UserエンティティをUserResponse DTOに変換して返す
+        return UserResponse.from(user);
+    }
+
+    /**
+     * Cloud利用可否を更新する
+     *
+     * <p>PUT /api/users/{id}/cloud-access で使用する。
+     * リクエストで指定されたcloudProvider/isEnabledの組み合わせでDBを更新する。
+     * 更新はトランザクション管理（@Transactional）で行う。
+     * ユーザーが存在しない場合は404 Not Foundをスローする。</p>
+     *
+     * <p>処理フロー:</p>
+     * <ol>
+     *   <li>ユーザーをIDで検索（存在しない場合は404）</li>
+     *   <li>リクエストの各cloudProviderに対してCloudAccessを取得・更新</li>
+     *   <li>更新後のユーザー詳細をUserResponseとして返す</li>
+     * </ol>
+     *
+     * @param id ユーザーのID
+     * @param request Cloud利用可否更新リクエスト
+     * @return 更新後のユーザー詳細のUserResponse（cloudAccess付き）
+     * @throws ResponseStatusException ユーザーが存在しない場合（404）
+     */
+    @Transactional
+    public UserResponse updateCloudAccess(Long id, CloudAccessUpdateRequest request) {
+        log.info("Cloud利用可否更新を開始する: id={}", id);
+
+        // ユーザーをcloudAccesses付きで取得（存在しない場合は404）
+        User user = userRepository.findByIdWithCloudAccesses(id)
+                .orElseThrow(() -> {
+                    log.warn("ユーザーが見つからない（Cloud利用可否更新）: id={}", id);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "ユーザーが見つかりません: id=" + id);
+                });
+
+        // リクエストの各エントリについてCloudAccessを更新する
+        for (CloudAccessUpdateRequest.CloudAccessEntry entry : request.getCloudAccess()) {
+            log.debug("Cloud利用可否を更新する: userId={}, provider={}, isEnabled={}",
+                    id, entry.getCloudProvider(), entry.getIsEnabled());
+
+            // 対象ユーザー・プロバイダーのCloudAccessを取得
+            CloudAccess cloudAccess = cloudAccessRepository
+                    .findByUserIdAndCloudProvider(id, entry.getCloudProvider())
+                    .orElseGet(() -> {
+                        // レコードが存在しない場合は新規作成
+                        // （通常はシードデータで全ユーザー×3プロバイダーのレコードが作成済み）
+                        log.info("CloudAccessレコードが存在しないため新規作成: userId={}, provider={}",
+                                id, entry.getCloudProvider());
+                        CloudAccess newAccess = CloudAccess.builder()
+                                .user(user)
+                                .cloudProvider(entry.getCloudProvider())
+                                .isEnabled(false)
+                                .build();
+                        return cloudAccessRepository.save(newAccess);
+                    });
+
+            // isEnabledを更新する
+            cloudAccess.setEnabled(entry.getIsEnabled());
+            cloudAccessRepository.save(cloudAccess);
+        }
+
+        log.info("Cloud利用可否更新完了: id={}", id);
+
+        // 更新後のユーザー詳細を再取得して返す
+        // （トランザクション内で更新済みのユーザーをflushしてから再取得）
+        User updatedUser = userRepository.findByIdWithCloudAccesses(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "ユーザーが見つかりません: id=" + id));
+
+        return UserResponse.from(updatedUser);
     }
 }

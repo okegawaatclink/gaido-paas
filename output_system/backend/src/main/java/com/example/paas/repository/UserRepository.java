@@ -95,4 +95,17 @@ public interface UserRepository extends CrudRepository<User, Long> {
            "LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(u.department) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<User> searchByKeywordWithCloudAccesses(@Param("keyword") String keyword);
+
+    /**
+     * IDでユーザーをcloudAccesses付きで取得する（N+1問題回避）
+     *
+     * <p>@Query + @EntityGraph により cloudAccesses を LEFT JOIN FETCH で一括取得する。
+     * ユーザー詳細API（GET /api/users/{id}）で使用する。</p>
+     *
+     * @param id 取得するユーザーのID
+     * @return 該当するユーザー（cloudAccessesが初期化済み）。存在しない場合はOptional.empty()
+     */
+    @EntityGraph(attributePaths = {"cloudAccesses"})
+    @Query("SELECT u FROM User u WHERE u.id = :id")
+    Optional<User> findByIdWithCloudAccesses(@Param("id") Long id);
 }
