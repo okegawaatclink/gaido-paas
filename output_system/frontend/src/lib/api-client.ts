@@ -210,6 +210,43 @@ export type CloudAccessUpdateRequest = {
 };
 
 /**
+ * 認証ユーザー自身のユーザー情報を取得する
+ *
+ * BFFプロキシ経由でバックエンドの GET /api/users/me を呼び出す。
+ * JWTトークンに含まれるemailクレームでDBユーザーを特定し、
+ * 自分のユーザー情報（社員ID・氏名・メール・部署・役職・CloudAccess）を返す。
+ *
+ * @returns 認証ユーザー自身のユーザー情報（CloudAccess付き）
+ * @throws {ApiError} API呼び出しに失敗した場合（401: 未認証、404: ユーザー不在等）
+ *
+ * @example
+ * const me = await getMe();
+ * console.log(me.name); // "佐藤 花子"
+ */
+export async function getMe(): Promise<UserResponse> {
+  return proxyFetch<UserResponse>("/api/proxy/users/me");
+}
+
+/**
+ * 認証ユーザー自身のCloud利用可否を取得する
+ *
+ * BFFプロキシ経由でバックエンドの GET /api/users/me/cloud-access を呼び出す。
+ * JWTトークンに含まれるemailクレームでDBユーザーを特定し、
+ * 自分のAWS/GCP/AzureのCloud利用可否リストを返す。
+ *
+ * @returns 認証ユーザー自身のCloudAccessリスト（AWS/GCP/Azure各1件）
+ * @throws {ApiError} API呼び出しに失敗した場合（401: 未認証、404: ユーザー不在等）
+ *
+ * @example
+ * const cloudAccess = await getMyCloudAccess();
+ * const awsAccess = cloudAccess.find(ca => ca.cloudProvider === "AWS");
+ * console.log(awsAccess?.isEnabled); // true or false
+ */
+export async function getMyCloudAccess(): Promise<CloudAccessResponse[]> {
+  return proxyFetch<CloudAccessResponse[]>("/api/proxy/users/me/cloud-access");
+}
+
+/**
  * Cloud利用可否を更新する
  *
  * BFFプロキシ経由でバックエンドの PUT /api/users/{id}/cloud-access を呼び出す。
