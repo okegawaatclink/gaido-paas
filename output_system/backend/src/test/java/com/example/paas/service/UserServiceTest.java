@@ -1,8 +1,10 @@
 package com.example.paas.service;
 
+import com.example.paas.dto.CloudAccessResponse;
 import com.example.paas.dto.UserResponse;
 import com.example.paas.model.CloudAccess;
 import com.example.paas.model.User;
+import com.example.paas.repository.CloudAccessRepository;
 import com.example.paas.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,11 +13,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -37,6 +44,9 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private CloudAccessRepository cloudAccessRepository;
 
     @InjectMocks
     private UserService userService;
@@ -347,5 +357,140 @@ class UserServiceTest {
         assertThat(result).hasSize(2);
         verify(userRepository, times(1)).findAllWithCloudAccesses();
         verify(userRepository, never()).searchByKeywordWithCloudAccesses(anyString());
+    }
+
+    // ========================================================================
+    // findByEmail(email) テスト
+    // ========================================================================
+
+    /**
+     * 【テスト対象】UserService#findByEmail
+     * 【テスト内容】存在するメールアドレスでユーザーを検索した場合
+     * 【期待結果】ユーザー情報（cloudAccess付き）がUserResponseとして返ること
+     *
+     * 【前提条件】
+     * - findByEmail でユーザーが見つかる
+     * - findByIdWithCloudAccesses でcloudAccesses付きユーザーが取得できる
+     */
+    @Test
+    @DisplayName("should return user with cloud access when email exists")
+    void findByEmail_shouldReturnUser_whenEmailExists() {
+        // Arrange
+        when(userRepository.findByEmail("sato.hanako@example.com")).thenReturn(Optional.of(generalUser));
+        when(userRepository.findByIdWithCloudAccesses(2L)).thenReturn(Optional.of(generalUser));
+
+        // Act
+        UserResponse result = userService.findByEmail("sato.hanako@example.com");
+
+        // Assert
+        assertThat(result.getEmployeeId()).isEqualTo("E002");
+        assertThat(result.getName()).isEqualTo("佐藤 花子");
+        assertThat(result.getEmail()).isEqualTo("sato.hanako@example.com");
+        assertThat(result.isAdmin()).isFalse();
+        assertThat(result.getCloudAccess()).hasSize(3);
+
+        verify(userRepository, times(1)).findByEmail("sato.hanako@example.com");
+        verify(userRepository, times(1)).findByIdWithCloudAccesses(2L);
+    }
+
+    /**
+     * 【テスト対象】UserService#findByEmail
+     * 【テスト内容】管理者ユーザーのメールアドレスで検索した場合
+     * 【期待結果】管理者フラグ=trueでユーザー情報が返ること
+     */
+    @Test
+    @DisplayName("should return admin user when admin email is given")
+    void findByEmail_shouldReturnAdminUser_whenAdminEmailIsGiven() {
+        // Arrange
+        when(userRepository.findByEmail("tanaka.admin@example.com")).thenReturn(Optional.of(adminUser));
+        when(userRepository.findByIdWithCloudAccesses(1L)).thenReturn(Optional.of(adminUser));
+
+        // Act
+        UserResponse result = userService.findByEmail("tanaka.admin@example.com");
+
+        // Assert
+        assertThat(result.getEmployeeId()).isEqualTo("E001");
+        assertThat(result.isAdmin()).isTrue();
+        assertThat(result.getCloudAccess()).hasSize(3);
+        // CloudAccessの内容を検証
+        assertThat(result.getCloudAccess().get(0).getCloudProvider()).isEqualTo("AWS");
+        assertThat(result.getCloudAccess().get(0).isEnabled()).isTrue();
+        assertThat(result.getCloudAccess().get(1).getCloudProvider()).isEqualTo("GCP");
+        assertThat(result.getCloudAccess().get(1).isEnabled()).isFalse();
+        assertThat(result.getCloudAccess().get(2).getCloudProvider()).isEqualTo("Azure");
+        assertThat(result.getCloudAccess().get(2).isEnabled()).isTrue();
+    }
+
+    /**
+     * 【テスト対象】UserService#findByEmail
+     * 【テスト内容】存在しないメールアドレスでユーザーを検索した場合
+     * 【期待結果】ResponseStatusException（404 NOT_FOUND）がスローされること
+     */
+    @Test
+    @DisplayName("should throw 404 when email does not exist")
+    void findByEmail_shouldThrow404_whenEmailNotFound() {
+        // Arrange
+        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.findByEmail("unknown@example.com"))
+            .isInstanceOf(ResponseStatusException.class)
+            .satisfies(ex -> {
+                ResponseStatusException rse = (ResponseStatusException) ex;
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            });
+
+        verify(userRepository, times(1)).findByEmail("unknown@example.com");
+        // findByIdWithCloudAccesses は呼ばれないはず（findByEmailが空を返したため）
+        verify(userRepository, never()).findByIdWithCloudAccesses(anyLong());
+    }
+
+    // ========================================================================
+    // findCloudAccessByEmail(email) テスト
+    // ========================================================================
+
+    /**
+     * 【テスト対象】UserService#findCloudAccessByEmail
+     * 【テスト内容】存在するメールアドレスでCloud利用可否を取得した場合
+     * 【期待結果】AWS/GCP/AzureのCloudAccessResponseリストが返ること
+     */
+    @Test
+    @DisplayName("should return cloud access list when email exists")
+    void findCloudAccessByEmail_shouldReturnCloudAccessList_whenEmailExists() {
+        // Arrange
+        when(userRepository.findByEmail("sato.hanako@example.com")).thenReturn(Optional.of(generalUser));
+        when(userRepository.findByIdWithCloudAccesses(2L)).thenReturn(Optional.of(generalUser));
+
+        // Act
+        List<CloudAccessResponse> result = userService.findCloudAccessByEmail("sato.hanako@example.com");
+
+        // Assert: 3件（AWS/GCP/Azure）が返ること
+        assertThat(result).hasSize(3);
+        // 各プロバイダーの存在確認（順序は実装依存のため個別検証）
+        assertThat(result).anyMatch(ca -> "AWS".equals(ca.getCloudProvider()));
+        assertThat(result).anyMatch(ca -> "GCP".equals(ca.getCloudProvider()));
+        assertThat(result).anyMatch(ca -> "Azure".equals(ca.getCloudProvider()));
+    }
+
+    /**
+     * 【テスト対象】UserService#findCloudAccessByEmail
+     * 【テスト内容】存在しないメールアドレスでCloud利用可否を取得しようとした場合
+     * 【期待結果】ResponseStatusException（404 NOT_FOUND）がスローされること
+     */
+    @Test
+    @DisplayName("should throw 404 when email does not exist for cloud access")
+    void findCloudAccessByEmail_shouldThrow404_whenEmailNotFound() {
+        // Arrange
+        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.findCloudAccessByEmail("unknown@example.com"))
+            .isInstanceOf(ResponseStatusException.class)
+            .satisfies(ex -> {
+                ResponseStatusException rse = (ResponseStatusException) ex;
+                assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            });
+
+        verify(userRepository, times(1)).findByEmail("unknown@example.com");
     }
 }
