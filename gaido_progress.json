@@ -1,0 +1,61 @@
+{
+  "phase": "実装フェーズ",
+  "status": "waiting_approval",
+  "current_task": null,
+  "progress": null,
+  "total": null,
+  "message": "動作確認をお願いします",
+  "timestamp": "2026-04-24T09:39:25.252325+00:00",
+  "flow_type": "new_development",
+  "ui_phase": "develop",
+  "ui_phase_number": 5,
+  "ui_phase_total": 9,
+  "ui_phase_label": "実装",
+  "ui_phases": [
+    {
+      "ui_phase": "welcome",
+      "ui_phase_label": "開発内容選択",
+      "ui_phase_number": 1
+    },
+    {
+      "ui_phase": "requirements_intake",
+      "ui_phase_label": "作業内容入力",
+      "ui_phase_number": 2
+    },
+    {
+      "ui_phase": "analyze",
+      "ui_phase_label": "壁打ち",
+      "ui_phase_number": 3
+    },
+    {
+      "ui_phase": "backlog",
+      "ui_phase_label": "要件確認",
+      "ui_phase_number": 4
+    },
+    {
+      "ui_phase": "develop",
+      "ui_phase_label": "実装",
+      "ui_phase_number": 5
+    },
+    {
+      "ui_phase": "test_design",
+      "ui_phase_label": "テスト設計",
+      "ui_phase_number": 6
+    },
+    {
+      "ui_phase": "test_run",
+      "ui_phase_label": "テスト実装",
+      "ui_phase_number": 7
+    },
+    {
+      "ui_phase": "finalize",
+      "ui_phase_label": "まとめ",
+      "ui_phase_number": 8
+    },
+    {
+      "ui_phase": "complete",
+      "ui_phase_label": "完了",
+      "ui_phase_number": 9
+    }
+  ]
+}

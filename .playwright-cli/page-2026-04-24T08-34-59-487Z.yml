@@ -1,0 +1,12 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "PaaS管理システム" [level=1] [ref=e5]
+      - paragraph [ref=e6]: クラウド利用管理ポータルへようこそ
+    - generic [ref=e7]:
+      - paragraph [ref=e8]: 社内アカウントでサインインしてください
+      - button "KeyCloakでログイン" [ref=e9]
+    - paragraph [ref=e11]:
+      - text: KeyCloakのアカウントをお持ちでない場合は
+      - text: システム管理者にお問い合わせください
+  - alert [ref=e12]

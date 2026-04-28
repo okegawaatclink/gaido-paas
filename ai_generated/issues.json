@@ -1,0 +1,289 @@
+[
+  {
+    "type": "epic",
+    "id": "epic-1",
+    "title": "Epic 1: 開発チームがアプリケーション開発を開始できる基盤を構築する",
+    "body": "## ユーザーストーリー\n\n**As a** 開発チーム\n**I want to** PostgreSQL・KeyCloak・Next.js・Spring MVCが統合されたDocker Compose開発環境を構築したい\n**So that** 各コンポーネントが連携した状態でアプリケーション開発を即座に開始できる\n\n## ビジネス価値\n\n- 開発環境の標準化による生産性向上\n- DBスキーマ・シードデータの初期セットアップ自動化\n- KeyCloakレルム設定の自動化による環境構築時間の短縮\n\n## 成功指標（KPI）\n\n| 指標 | 目標値 | 計測方法 |\n|------|--------|----------|\n| docker compose up -d で全サービスが起動する | 100% | 手動確認 |\n| DBマイグレーションが自動実行される | 100% | ログ確認 |\n| KeyCloakレルムが自動インポートされる | 100% | 管理画面確認 |\n\n## INVESTチェック\n\n- [x] **I**ndependent: 他Epicと独立して構築可能\n- [x] **N**egotiable: DB構成やシードデータは調整可能\n- [x] **V**aluable: 開発基盤がなければ他の全機能が開発できない\n- [x] **E**stimable: 技術選定済みで見積もり可能\n- [x] **S**mall: インフラ・DB・初期設定に限定\n- [x] **T**estable: docker compose upで全サービス起動を検証可能\n\n## YAGNIチェック\n\n- [x] 今この瞬間、これがないと先に進めないか？ → Yes、開発基盤がなければ何も始められない\n- [x] 作らないことで10倍以上の手戻りが発生するか？ → Yes、後から基盤を変えると全コンポーネントに影響\n- [x] 推測ではなく実際の要求に基づいているか？ → Yes、要件定義書の技術選定・デプロイ構造に基づく\n\n## 含まれるPBI\n\n（Issue登録後にTasklistで設定）\n\n## 主要リスク\n\n| リスク | 影響度 | 発生可能性 | 対策 |\n|--------|--------|-----------|------|\n| KeyCloakのレルム設定が複雑 | Med | Med | realm-export.jsonで設定をコード管理 |\n| Docker Composeのネットワーク設定 | Low | Low | instance-config.mdの設定に従う |\n\n## 前提条件\n\n- Docker/Docker Composeが利用可能であること\n- instance-config.mdの設定値が確定していること\n\n## 参照ドキュメント\n\n| パス | ファイル名 | 内容 |\n|------|-----------|------|\n| ai_generated/requirements/ | architecture.md | システム構成図 |\n| ai_generated/requirements/ | db.md | ER図・テーブル定義 |\n| ai_generated/requirements/ | devops.md | デプロイ構造・コマンド |\n| ai_generated/requirements/ | file_structure.md | ディレクトリ構成 |",
+    "labels": [
+      "epic"
+    ]
+  },
+  {
+    "type": "epic",
+    "id": "epic-2",
+    "title": "Epic 2: ユーザーがKeyCloakを使って安全にログイン・ログアウトできる",
+    "body": "## ユーザーストーリー\n\n**As a** システム利用者（管理者・一般社員）\n**I want to** KeyCloakによるOIDC認証でログイン・ログアウトしたい\n**So that** 社内の統合ID基盤で安全にシステムを利用でき、ロールに応じた画面に自動遷移できる\n\n## ビジネス価値\n\n- 社内IdP（KeyCloak）との統合によるシングルサインオン実現\n- ロールベースアクセス制御による情報セキュリティの確保\n- セッション管理（8時間タイムアウト）による不正利用防止\n\n## 成功指標（KPI）\n\n| 指標 | 目標値 | 計測方法 |\n|------|--------|----------|\n| OIDC認証フローが正常に完了する | 100% | E2Eテスト |\n| ロールに応じた画面遷移が正しい | 100% | E2Eテスト |\n| セッションタイムアウトが8時間で機能する | 100% | 手動確認 |\n\n## INVESTチェック\n\n- [x] **I**ndependent: Epic 1（基盤）に依存するが、認証機能自体は独立\n- [x] **N**egotiable: セッション時間やリダイレクト先は調整可能\n- [x] **V**aluable: 認証なしでは管理機能が利用できない\n- [x] **E**stimable: NextAuth.js + KeyCloak OIDCの実装パターンが確立\n- [x] **S**mall: 認証・認可・セッション管理に限定\n- [x] **T**estable: ログイン/ログアウトフローのE2Eテストで検証可能\n\n## YAGNIチェック\n\n- [x] 今この瞬間、これがないと先に進めないか？ → Yes、認証なしではアクセス制御できない\n- [x] 作らないことで10倍以上の手戻りが発生するか？ → Yes、認証は全画面に影響\n- [x] 推測ではなく実際の要求に基づいているか？ → Yes、要件定義書のKeyCloakOIDC指定に基づく\n\n## 含まれるPBI\n\n（Issue登録後にTasklistで設定）\n\n## 主要リスク\n\n| リスク | 影響度 | 発生可能性 | 対策 |\n|--------|--------|-----------|------|\n| KeyCloak OIDCの設定ミス | High | Med | realm-export.jsonでの設定管理・ドキュメント参照 |\n| トークンリフレッシュの実装漏れ | Med | Med | NextAuth.jsのcallbacks活用 |\n\n## 前提条件\n\n- Epic 1（開発基盤）が完了していること\n- KeyCloakが起動し、レルムが設定済みであること\n\n## 参照ドキュメント\n\n| パス | ファイル名 | 内容 |\n|------|-----------|------|\n| ai_generated/requirements/ | architecture.md | 認証フローシーケンス図 |\n| ai_generated/requirements/ | screens.md | ログイン画面・画面遷移図 |\n| ai_generated/requirements/ | api.md | BFF認証API定義 |",
+    "labels": [
+      "epic"
+    ]
+  },
+  {
+    "type": "epic",
+    "id": "epic-3",
+    "title": "Epic 3: 管理者がCloud利用可否を管理し、一般社員が自分の状況を確認できる",
+    "body": "## ユーザーストーリー\n\n**As a** 管理者・一般社員\n**I want to** 管理者はユーザーのCloud利用可否（AWS/GCP/Azure）を検索・付与・剥奪でき、一般社員は自分の利用状況を確認したい\n**So that** 社内プライベートクラウドへのアクセス制御を一元管理し、利用者が自分の権限を把握できる\n\n## ビジネス価値\n\n- Cloud利用可否の一元管理による運用効率化\n- 管理者の検索・編集UIによる作業時間短縮\n- 一般社員の自己確認による問い合わせ削減\n- KeyCloakロール同期によるアクセス制御の一貫性確保\n\n## 成功指標（KPI）\n\n| 指標 | 目標値 | 計測方法 |\n|------|--------|----------|\n| ユーザー一覧の表示速度 | 3秒以内 | レスポンス計測 |\n| アクセス権変更がKeyCloakに同期される | 100% | E2Eテスト |\n| 一般社員が自分の利用状況を確認できる | 100% | E2Eテスト |\n\n## INVESTチェック\n\n- [x] **I**ndependent: Epic 1・2に依存するが、ビジネスロジック自体は独立\n- [x] **N**egotiable: 検索条件やUI表示は調整可能\n- [x] **V**aluable: システムのコアビジネス価値（Cloud利用可否管理）\n- [x] **E**stimable: CRUD + KeyCloak連携の実装パターンが明確\n- [x] **S**mall: ユーザー管理とCloud利用可否管理に限定\n- [x] **T**estable: 一覧表示・検索・権限変更・自己確認のE2Eテストで検証可能\n\n## YAGNIチェック\n\n- [x] 今この瞬間、これがないと先に進めないか？ → Yes、システムのコア機能\n- [x] 作らないことで10倍以上の手戻りが発生するか？ → Yes、ビジネス要件そのもの\n- [x] 推測ではなく実際の要求に基づいているか？ → Yes、管理者機能・一般社員機能として明記\n\n## 含まれるPBI\n\n（Issue登録後にTasklistで設定）\n\n## 主要リスク\n\n| リスク | 影響度 | 発生可能性 | 対策 |\n|--------|--------|-----------|------|\n| KeyCloak Admin API連携の複雑さ | Med | Med | BFFレイヤーで吸収、エラーハンドリング実装 |\n| 大量ユーザー時のレスポンス遅延 | Med | Low | 1000人規模でのテスト確認 |\n\n## 前提条件\n\n- Epic 1（開発基盤）が完了していること\n- Epic 2（認証・認可）が完了していること\n\n## 参照ドキュメント\n\n| パス | ファイル名 | 内容 |\n|------|-----------|------|\n| ai_generated/requirements/ | screens.md | ユーザー一覧・詳細・マイアクセス画面 |\n| ai_generated/requirements/ | api.md | バックエンドAPI・BFF API定義 |\n| ai_generated/requirements/ | db.md | users・cloud_accessテーブル定義 |\n| ai_generated/requirements/ | architecture.md | アクセス権変更フロー |",
+    "labels": [
+      "epic"
+    ]
+  },
+  {
+    "type": "pbi",
+    "id": "pbi-1-1",
+    "parent_id": "epic-1",
+    "title": "PBI 1.1: docker compose upで全サービスが起動できる",
+    "body": "## 親Epic\n\n（Issue登録後にTasklistで設定）\n\n## ユーザーストーリー\n\n**As a** 開発者\n**I want to** docker compose up -d 一発でPostgreSQL・KeyCloak・Next.js・Spring MVCが起動したい\n**So that** 環境構築に時間をかけず即座に開発を開始できる\n\n## 価値の説明\n\nこの PBI が完了すると、開発者は output_system/ ディレクトリで docker compose up -d を実行するだけで、全4サービス（フロントエンド、バックエンド、PostgreSQL、KeyCloak）が起動し、相互に通信可能な状態になる。\n\n## INVESTチェック\n\n- [x] **I**ndependent: 他PBIに依存しない最初のPBI\n- [x] **N**egotiable: ポート番号やサービス名は調整可能\n- [x] **V**aluable: 開発基盤として全後続作業の前提\n- [x] **E**stimable: Docker Compose設定の工数は見積もり可能\n- [x] **S**mall: Dockerファイルとcompose設定のみ\n- [x] **T**estable: docker compose upで全サービス起動を確認可能\n\n## YAGNIチェック\n\n- [x] 今この瞬間、これがないと先に進めないか？ → Yes\n- [x] 作らないことで10倍以上の手戻りが発生するか？ → Yes\n- [x] 推測ではなく実際の要求に基づいているか？ → Yes、devops.mdに基づく\n\n## 完成の定義（DoD）\n\n- [ ] 受入条件がすべて満たされている\n- [ ] コードレビュー完了\n- [ ] docker compose up -d で全サービスが起動する\n\n## 受入条件\n\n| # | 条件 | 品質分類 | 回帰テスト |\n|---|------|----------|-----------|\n| 1 | docker compose up -d で4サービス（frontend, backend, postgres, keycloak）が起動する | [必須] | ○ |\n| 2 | 各サービス間のネットワーク通信が可能 | [必須] | ○ |\n| 3 | SSL証明書設定がDockerfileに含まれる（オプショナル） | [必須] | × |\n| 4 | instance-config.mdのコンテナ名・ポート・ネットワーク設定に従っている | [必須] | × |\n\n## 依存関係\n\n- **前提**:\n  - なし\n- **後続**:\n  - PBI 1.2\n\n## タスク\n\n（Issue登録後にTasklistで設定）",
+    "labels": [
+      "pbi"
+    ]
+  },
+  {
+    "type": "pbi",
+    "id": "pbi-1-2",
+    "parent_id": "epic-1",
+    "title": "PBI 1.2: DBスキーマとシードデータが自動投入される",
+    "body": "## 親Epic\n\n（Issue登録後にTasklistで設定）\n\n## ユーザーストーリー\n\n**As a** 開発者\n**I want to** サービス起動時にDBスキーマとシードデータが自動的に投入されたい\n**So that** 手動でSQLを実行する手間なく、動作確認可能な状態で開発を始められる\n\n## 価値の説明\n\nこの PBI が完了すると、docker compose up 後にPostgreSQLにusers・cloud_accessテーブルが自動作成され、管理者1名・一般社員数名のシードデータが投入された状態になる。\n\n## INVESTチェック\n\n- [x] **I**ndependent: Docker Compose起動後のDB初期化に限定\n- [x] **N**egotiable: シードデータの内容は調整可能\n- [x] **V**aluable: 手動SQL実行の排除\n- [x] **E**stimable: Flyway/SQLスクリプトの工数は見積もり可能\n- [x] **S**mall: DDLとシードデータのみ\n- [x] **T**estable: テーブル存在・データ件数で検証可能\n\n## YAGNIチェック\n\n- [x] 今この瞬間、これがないと先に進めないか？ → Yes\n- [x] 作らないことで10倍以上の手戻りが発生するか？ → Yes\n- [x] 推測ではなく実際の要求に基づいているか？ → Yes、db.mdのテーブル定義に基づく\n\n## 完成の定義（DoD）\n\n- [ ] 受入条件がすべて満たされている\n- [ ] コードレビュー完了\n- [ ] DBマイグレーションが自動実行される\n\n## 受入条件\n\n| # | 条件 | 品質分類 | 回帰テスト |\n|---|------|----------|-----------|\n| 1 | usersテーブルがdb.mdの定義通りに作成される | [必須] | ○ |\n| 2 | cloud_accessテーブルがdb.mdの定義通りに作成される（複合ユニーク制約含む） | [必須] | ○ |\n| 3 | 管理者ユーザー1名がシードデータとして投入される | [必須] | ○ |\n| 4 | 一般社員ユーザー数名がシードデータとして投入される | [必須] | ○ |\n| 5 | 各ユーザーにAWS/GCP/Azureのcloud_accessレコードが存在する | [必須] | ○ |\n\n## 依存関係\n\n- **前提**:\n  - PBI 1.1\n- **後続**:\n  - PBI 2.1\n  - PBI 3.1\n\n## タスク\n\n（Issue登録後にTasklistで設定）",
+    "labels": [
+      "pbi"
+    ]
+  },
+  {
+    "type": "pbi",
+    "id": "pbi-2-1",
+    "parent_id": "epic-2",
+    "title": "PBI 2.1: KeyCloak OIDCでログインできる",
+    "body": "## 親Epic\n\n（Issue登録後にTasklistで設定）\n\n## ユーザーストーリー\n\n**As a** システム利用者\n**I want to** KeyCloakのログイン画面で認証情報を入力してログインしたい\n**So that** 社内の統合ID基盤を使って安全にシステムにアクセスできる\n\n## 価値の説明\n\nこの PBI が完了すると、ユーザーはブラウザでシステムにアクセスした際にKeyCloakのログイン画面にリダイレクトされ、認証後にシステムに戻ってくる。NextAuth.jsによるOIDCフロー（Authorization Code Flow）が動作し、セッションが確立される。\n\n## INVESTチェック\n\n- [x] **I**ndependent: 認証機能として独立\n- [x] **N**egotiable: セッション設定等は調整可能\n- [x] **V**aluable: 認証なしではシステム利用不可\n- [x] **E**stimable: NextAuth.js + KeyCloak OIDCの実装パターン確立\n- [x] **S**mall: OIDC認証フロー実装に限定\n- [x] **T**estable: ログインフローのE2Eテストで検証可能\n\n## YAGNIチェック\n\n- [x] 今この瞬間、これがないと先に進めないか？ → Yes\n- [x] 作らないことで10倍以上の手戻りが発生するか？ → Yes\n- [x] 推測ではなく実際の要求に基づいているか？ → Yes\n\n## 完成の定義（DoD）\n\n- [ ] 受入条件がすべて満たされている\n- [ ] コードレビュー完了\n- [ ] E2Eテスト合格\n\n## 受入条件\n\n| # | 条件 | 品質分類 | 回帰テスト |\n|---|------|----------|-----------|\n| 1 | 未認証ユーザーがアクセスするとKeyCloakログイン画面にリダイレクトされる | [必須] | ○ |\n| 2 | KeyCloakで認証後、システムにリダイレクトされセッションが確立される | [必須] | ○ |\n| 3 | セッションタイムアウトが8時間で設定されている | [必須] | ○ |\n| 4 | JWTトークンのリフレッシュが自動で行われる | [必須] | ○ |\n| 5 | KeyCloakレルム設定（realm-export.json）にクライアント設定が含まれる | [必須] | × |\n\n## 依存関係\n\n- **前提**:\n  - PBI 1.1\n  - PBI 1.2\n- **後続**:\n  - PBI 2.2\n\n## タスク\n\n（Issue登録後にTasklistで設定）",
+    "labels": [
+      "pbi"
+    ]
+  },
+  {
+    "type": "pbi",
+    "id": "pbi-2-2",
+    "parent_id": "epic-2",
+    "title": "PBI 2.2: ロールに応じた画面遷移とログアウトができる",
+    "body": "## 親Epic\n\n（Issue登録後にTasklistで設定）\n\n## ユーザーストーリー\n\n**As a** ログイン済みユーザー\n**I want to** 自分のロール（管理者/一般社員）に応じた画面に自動遷移し、ログアウトもしたい\n**So that** 自分の権限に合った画面で作業を開始でき、安全に終了できる\n\n## 価値の説明\n\nこの PBI が完了すると、管理者はログイン後にユーザー一覧画面（/admin/users）、一般社員はマイアクセス画面（/my-access）に自動遷移する。管理者以外が/admin/配下にアクセスしようとした場合は拒否される。ログアウトするとKeyCloakセッションも含めて完全にログアウトされる。\n\n## INVESTチェック\n\n- [x] **I**ndependent: ログイン機能の上に構築されるが、ロール判定ロジック自体は独立\n- [x] **N**egotiable: リダイレクト先は調整可能\n- [x] **V**aluable: ロール分離とログアウトはセキュリティ上必須\n- [x] **E**stimable: NextAuth.jsのcallbacks + ミドルウェアで見積もり可能\n- [x] **S**mall: ロール判定・リダイレクト・ログアウトに限定\n- [x] **T**estable: ロール別画面遷移とログアウトのE2Eテストで検証可能\n\n## YAGNIチェック\n\n- [x] 今この瞬間、これがないと先に進めないか？ → Yes\n- [x] 作らないことで10倍以上の手戻りが発生するか？ → Yes\n- [x] 推測ではなく実際の要求に基づいているか？ → Yes、screens.mdの画面遷移図に基づく\n\n## 完成の定義（DoD）\n\n- [ ] 受入条件がすべて満たされている\n- [ ] コードレビュー完了\n- [ ] E2Eテスト合格\n\n## 受入条件\n\n| # | 条件 | 品質分類 | 回帰テスト |\n|---|------|----------|-----------|\n| 1 | 管理者ログイン後、/admin/usersに自動遷移する | [必須] | ○ |\n| 2 | 一般社員ログイン後、/my-accessに自動遷移する | [必須] | ○ |\n| 3 | 一般社員が/admin/配下にアクセスすると拒否される | [必須] | ○ |\n| 4 | ログアウトするとセッション・KeyCloakセッションが破棄される | [必須] | ○ |\n| 5 | ログアウト後、再度アクセスするとログイン画面が表示される | [必須] | ○ |\n\n## 依存関係\n\n- **前提**:\n  - PBI 2.1\n- **後続**:\n  - PBI 3.1\n  - PBI 3.2\n\n## タスク\n\n（Issue登録後にTasklistで設定）",
+    "labels": [
+      "pbi"
+    ]
+  },
+  {
+    "type": "pbi",
+    "id": "pbi-3-1",
+    "parent_id": "epic-3",
+    "title": "PBI 3.1: 管理者がユーザー一覧を表示・検索できる",
+    "body": "## 親Epic\n\n（Issue登録後にTasklistで設定）\n\n## ユーザーストーリー\n\n**As a** 管理者\n**I want to** ユーザー一覧を表示し、社員ID・氏名・部署で検索したい\n**So that** Cloud利用可否を変更したい対象ユーザーを素早く見つけられる\n\n## 価値の説明\n\nこの PBI が完了すると、管理者はユーザー一覧画面で全ユーザーの社員ID・氏名・部署・Cloud利用可否状況を一覧表示でき、検索バーでキーワード検索して対象ユーザーを絞り込める。\n\n## INVESTチェック\n\n- [x] **I**ndependent: ユーザー一覧表示・検索機能として独立\n- [x] **N**egotiable: 検索条件やテーブル列は調整可能\n- [x] **V**aluable: 管理者がユーザーを見つける基本機能\n- [x] **E**stimable: REST API + テーブル表示の標準パターン\n- [x] **S**mall: 一覧表示と検索に限定\n- [x] **T**estable: 画面表示・検索結果のE2Eテストで検証可能\n\n## YAGNIチェック\n\n- [x] 今この瞬間、これがないと先に進めないか？ → Yes\n- [x] 作らないことで10倍以上の手戻りが発生するか？ → Yes\n- [x] 推測ではなく実際の要求に基づいているか？ → Yes、管理者機能として明記\n\n## 完成の定義（DoD）\n\n- [ ] 受入条件がすべて満たされている\n- [ ] コードレビュー完了\n- [ ] ユニットテストカバレッジ達成\n- [ ] E2Eテスト合格\n\n## 受入条件\n\n| # | 条件 | 品質分類 | 回帰テスト |\n|---|------|----------|-----------|\n| 1 | ユーザー一覧画面で全ユーザーが表示される（ページネーションなし） | [必須] | ○ |\n| 2 | 社員ID・氏名・部署で部分一致検索ができる | [必須] | ○ |\n| 3 | テーブルに社員ID・氏名・部署・AWS/GCP/Azure利用可否が表示される | [必須] | ○ |\n| 4 | バックエンドAPI（GET /api/users, GET /api/users/search）が動作する | [必須] | ○ |\n| 5 | 画面表示が3秒以内に完了する | [必須] | △ |\n| 6 | BFFのAPIプロキシ経由でバックエンドAPIにアクセスする | [必須] | ○ |\n\n## 依存関係\n\n- **前提**:\n  - PBI 1.2\n  - PBI 2.2\n- **後続**:\n  - PBI 3.2\n\n## タスク\n\n（Issue登録後にTasklistで設定）",
+    "labels": [
+      "pbi"
+    ]
+  },
+  {
+    "type": "pbi",
+    "id": "pbi-3-2",
+    "parent_id": "epic-3",
+    "title": "PBI 3.2: 管理者がCloud利用可否を付与・剥奪できる",
+    "body": "## 親Epic\n\n（Issue登録後にTasklistで設定）\n\n## ユーザーストーリー\n\n**As a** 管理者\n**I want to** ユーザー詳細画面でAWS/GCP/Azureの利用可否をトグルで切り替えて保存したい\n**So that** 各社員のCloud利用権限を迅速に管理でき、変更がKeyCloakにも自動反映される\n\n## 価値の説明\n\nこの PBI が完了すると、管理者はユーザー一覧からユーザーを選択して詳細画面を表示し、AWS/GCP/Azureそれぞれのトグルスイッチで利用可否を切り替えて保存できる。保存時にDBが更新され、同時にKeyCloakのロール/グループにも自動同期される。\n\n## INVESTチェック\n\n- [x] **I**ndependent: ユーザー一覧の上に構築されるが、編集ロジック自体は独立\n- [x] **N**egotiable: UI形式（トグル/チェックボックス等）は調整可能\n- [x] **V**aluable: システムのコア機能（アクセス制御管理）\n- [x] **E**stimable: REST API + KeyCloak Admin APIの実装パターンが明確\n- [x] **S**mall: ユーザー詳細表示・編集・KeyCloak同期に限定\n- [x] **T**estable: 権限変更・DB反映・KeyCloak同期のE2Eテストで検証可能\n\n## YAGNIチェック\n\n- [x] 今この瞬間、これがないと先に進めないか？ → Yes\n- [x] 作らないことで10倍以上の手戻りが発生するか？ → Yes\n- [x] 推測ではなく実際の要求に基づいているか？ → Yes、管理者機能として明記\n\n## 完成の定義（DoD）\n\n- [ ] 受入条件がすべて満たされている\n- [ ] コードレビュー完了\n- [ ] ユニットテストカバレッジ達成\n- [ ] E2Eテスト合格\n\n## 受入条件\n\n| # | 条件 | 品質分類 | 回帰テスト |\n|---|------|----------|-----------|\n| 1 | ユーザー詳細画面でユーザー情報（社員ID/氏名/メール/部署/役職）が表示される | [必須] | ○ |\n| 2 | AWS/GCP/Azureの利用可否がトグルスイッチで表示される | [必須] | ○ |\n| 3 | トグルを切り替えて保存するとDBが更新される | [必須] | ○ |\n| 4 | 保存時にKeyCloakのロール/グループに自動同期される | [必須] | ○ |\n| 5 | バックエンドAPI（GET /api/users/{id}, PUT /api/users/{id}/cloud-access）が動作する | [必須] | ○ |\n| 6 | 「ユーザー一覧に戻る」リンクが機能する | [必須] | ○ |\n\n## 依存関係\n\n- **前提**:\n  - PBI 3.1\n- **後続**:\n  - PBI 3.3\n\n## タスク\n\n（Issue登録後にTasklistで設定）",
+    "labels": [
+      "pbi"
+    ]
+  },
+  {
+    "type": "pbi",
+    "id": "pbi-3-3",
+    "parent_id": "epic-3",
+    "title": "PBI 3.3: 一般社員が自分のCloud利用状況を確認できる",
+    "body": "## 親Epic\n\n（Issue登録後にTasklistで設定）\n\n## ユーザーストーリー\n\n**As a** 一般社員\n**I want to** 自分のCloud利用可否状況（AWS/GCP/Azure）を確認したい\n**So that** どのCloudが利用可能かを把握し、問い合わせなく自分で確認できる\n\n## 価値の説明\n\nこの PBI が完了すると、一般社員はマイアクセス画面で自分のAWS/GCP/Azureそれぞれの利用可否状態をカード形式で確認できる。\n\n## INVESTチェック\n\n- [x] **I**ndependent: マイアクセス画面として独立\n- [x] **N**egotiable: 表示形式（カード/リスト等）は調整可能\n- [x] **V**aluable: 一般社員の自己確認による問い合わせ削減\n- [x] **E**stimable: REST API + カード表示の標準パターン\n- [x] **S**mall: マイアクセス画面1画面のみ\n- [x] **T**estable: 画面表示のE2Eテストで検証可能\n\n## YAGNIチェック\n\n- [x] 今この瞬間、これがないと先に進めないか？ → Yes\n- [x] 作らないことで10倍以上の手戻りが発生するか？ → Yes\n- [x] 推測ではなく実際の要求に基づいているか？ → Yes、一般社員機能として明記\n\n## 完成の定義（DoD）\n\n- [ ] 受入条件がすべて満たされている\n- [ ] コードレビュー完了\n- [ ] ユニットテストカバレッジ達成\n- [ ] E2Eテスト合格\n\n## 受入条件\n\n| # | 条件 | 品質分類 | 回帰テスト |\n|---|------|----------|-----------|\n| 1 | マイアクセス画面でAWS/GCP/Azureの利用可否が表示される | [必須] | ○ |\n| 2 | 利用可/利用不可が視覚的に区別できる | [必須] | ○ |\n| 3 | バックエンドAPI（GET /api/users/me, GET /api/users/me/cloud-access）が動作する | [必須] | ○ |\n| 4 | BFFのAPIプロキシ経由でバックエンドAPIにアクセスする | [必須] | ○ |\n| 5 | 画面表示が3秒以内に完了する | [必須] | △ |\n\n## 依存関係\n\n- **前提**:\n  - PBI 1.2\n  - PBI 2.2\n- **後続**:\n  - なし\n\n## タスク\n\n（Issue登録後にTasklistで設定）",
+    "labels": [
+      "pbi"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-1-1-1",
+    "parent_id": "pbi-1-1",
+    "title": "Task 1.1.1: output_system/のプロジェクト構成を初期化する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- output_system/ ディレクトリ配下にfrontend/、backend/、keycloak/ ディレクトリを作成\n- frontend/: Next.js App Routerプロジェクトを初期化（package.json, next.config.ts, tsconfig.json, tailwind.config.ts）\n- frontend/.npmrc に min-release-age=7 を設定（サプライチェーン攻撃対策）\n- backend/: Spring MVC (Java 21) プロジェクトを初期化（pom.xml, ディレクトリ構成）\n- keycloak/: realm-export.json の空テンプレートを配置\n\n## 完了条件\n\n- [ ] output_system/frontend/ にNext.jsプロジェクトの基本ファイルが存在する\n- [ ] output_system/frontend/.npmrc に min-release-age=7 が設定されている\n- [ ] output_system/backend/ にSpring MVCプロジェクトの基本ファイルが存在する\n- [ ] output_system/keycloak/ にrealm-export.jsonが存在する\n- [ ] file_structure.mdのディレクトリ構成に準拠している\n\n## 技術的な注意点\n\n- Next.jsはApp Router（14+）を使用\n- Spring MVCはJava 21 LTS\n- UIライブラリはshadcn/ui + Tailwind CSS\n- pom.xmlにspringdoc-openapi依存を含める\n- サプライチェーン攻撃対策として.npmrcにmin-release-age=7を必ず設定\n\n## 依存関係\n\n- **前提（これが必要）**: なし\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/file_structure.md\n- ai_generated/requirements/architecture.md\n- .claude/rules/supply-chain-security.md",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-1-1-2",
+    "parent_id": "pbi-1-1",
+    "title": "Task 1.1.2: Dockerfileを作成する（フロントエンド・バックエンド）",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- output_system/frontend/Dockerfile を作成（ubuntu:24.04ベース、Node.js、SSL証明書対応）\n- output_system/backend/Dockerfile を作成（ubuntu:24.04ベース、Java 21、Maven、SSL証明書対応）\n- SSL証明書設定をオプショナルに実装（ssl-certificates/ディレクトリ対応）\n\n## 完了条件\n\n- [ ] frontend/Dockerfile が存在し、ubuntu:24.04ベースである\n- [ ] backend/Dockerfile が存在し、ubuntu:24.04ベースである\n- [ ] SSL証明書のCOPYとupdate-ca-certificates処理がオプショナルに含まれている\n- [ ] Node.jsのNODE_EXTRA_CA_CERTS環境変数が適切に設定されている\n- [ ] docker build が成功する\n\n## 技術的な注意点\n\n- ベースイメージは必ずubuntu:24.04を使用（constraints.md準拠）\n- ssl-certificates/はルート階層にあるため、ビルドコンテキストの設定に注意\n- COPY ssl-certificates/ は空ディレクトリでもビルド成功する\n- NODE_EXTRA_CA_CERTSはnpm install実行時に同一RUN内で設定\n\n## 依存関係\n\n- **前提（これが必要）**: task-1-1-1\n- **ブロッカー**: なし\n\n## 参考資料\n\n- .claude/rules/constraints.md（Docker設定セクション）\n- ai_generated/requirements/devops.md",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-1-1-3",
+    "parent_id": "pbi-1-1",
+    "title": "Task 1.1.3: docker-compose.ymlを作成し全サービスを統合起動する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- output_system/docker-compose.yml を作成\n- サービス定義: frontend, backend, postgres, keycloak の4サービス\n- ネットワーク設定: instance-config.mdのDockerネットワーク名を使用（external: true）\n- コンテナ名設定: instance-config.mdのコンテナ名を使用\n- ポート設定: フロントエンド3001、バックエンド3002、PostgreSQL5432、KeyCloak8080\n- 環境変数設定: devops.mdの環境変数一覧に基づく\n- サービス間の依存関係（depends_on）設定\n- __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS環境変数の設定\n\n## 完了条件\n\n- [ ] docker compose up -d で4サービスが全て起動する\n- [ ] コンテナ名がinstance-config.mdの設定値に従っている\n- [ ] ネットワーク名がinstance-config.mdの設定値に従っている（external: true）\n- [ ] 各サービス間のネットワーク通信が可能\n- [ ] PostgreSQLにJDBC接続可能\n- [ ] KeyCloakの管理画面にアクセス可能\n\n## 技術的な注意点\n\n- networksはexternal: trueを指定（既存のAI Agentネットワークに参加）\n- ボリュームマウントは使用しない（constraints.md準拠）\n- PostgreSQLはpostgres:16イメージを使用\n- KeyCloakはquay.io/keycloak/keycloak:latestイメージを使用\n- ビルドコンテキストを親ディレクトリに設定（SSL証明書参照のため）\n\n## 依存関係\n\n- **前提（これが必要）**: task-1-1-2\n- **ブロッカー**: なし\n\n## 参考資料\n\n- .claude/rules/instance-config.md\n- .claude/rules/constraints.md（docker-compose.yaml設定セクション）\n- ai_generated/requirements/devops.md",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-1-2-1",
+    "parent_id": "pbi-1-2",
+    "title": "Task 1.2.1: Flywayマイグレーション（V1__init.sql）でDBスキーマを作成する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- output_system/backend/src/main/resources/db/migration/V1__init.sql を作成\n- usersテーブル: id(BIGSERIAL PK), employee_id(VARCHAR(50) UNIQUE NOT NULL), name(VARCHAR(100) NOT NULL), email(VARCHAR(255) NOT NULL), department(VARCHAR(100)), position(VARCHAR(100)), is_admin(BOOLEAN NOT NULL DEFAULT false), created_at(TIMESTAMP NOT NULL DEFAULT NOW()), updated_at(TIMESTAMP NOT NULL DEFAULT NOW())\n- cloud_accessテーブル: id(BIGSERIAL PK), user_id(BIGINT FK NOT NULL), cloud_provider(VARCHAR(20) NOT NULL), is_enabled(BOOLEAN NOT NULL DEFAULT false), created_at(TIMESTAMP NOT NULL DEFAULT NOW()), updated_at(TIMESTAMP NOT NULL DEFAULT NOW())\n- 複合ユニーク制約: cloud_access(user_id, cloud_provider)\n- pom.xmlにFlyway依存を追加\n- application.ymlにFlyway設定を追加\n\n## 完了条件\n\n- [ ] V1__init.sql が存在し、usersテーブルのDDLが含まれる\n- [ ] V1__init.sql にcloud_accessテーブルのDDLが含まれる\n- [ ] cloud_access(user_id, cloud_provider)の複合ユニーク制約が定義されている\n- [ ] Flyway依存がpom.xmlに追加されている\n- [ ] Spring Boot起動時にマイグレーションが自動実行される\n\n## 技術的な注意点\n\n- db.mdのテーブル定義に厳密に従う\n- タイムスタンプはTIMESTAMP型を使用\n- updated_atの自動更新トリガーは任意（シンプルさ優先）\n\n## 依存関係\n\n- **前提（これが必要）**: task-1-1-3\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/db.md",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-1-2-2",
+    "parent_id": "pbi-1-2",
+    "title": "Task 1.2.2: シードデータ（V2__seed.sql）を投入する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- output_system/backend/src/main/resources/db/migration/V2__seed.sql を作成\n- 管理者ユーザー1名を投入（is_admin=true）\n- 一般社員ユーザー3名を投入（is_admin=false）\n- 各ユーザーにAWS/GCP/Azureのcloud_accessレコードを投入（一部有効/無効を混在）\n\n## 完了条件\n\n- [ ] V2__seed.sql が存在する\n- [ ] 管理者ユーザー1名が投入される\n- [ ] 一般社員ユーザー3名が投入される\n- [ ] 各ユーザーにAWS/GCP/Azure計3件のcloud_accessレコードが存在する\n- [ ] Spring Boot起動時にシードデータが自動投入される\n\n## 技術的な注意点\n\n- シードデータのemployee_idは社員ID形式（例: E001, E002, ...）\n- KeyCloakのユーザーと対応するようにメールアドレスを設定\n- cloud_accessのis_enabledは一部true/一部falseで設定（動作確認しやすくする）\n\n## 依存関係\n\n- **前提（これが必要）**: task-1-2-1\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/db.md（初期データセクション）",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-1-2-3",
+    "parent_id": "pbi-1-2",
+    "title": "Task 1.2.3: Spring MVCのエンティティ・リポジトリを実装する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- User.java エンティティクラスを実装（db.mdのusersテーブルに対応）\n- CloudAccess.java エンティティクラスを実装（db.mdのcloud_accessテーブルに対応）\n- UserRepository.java を実装（Spring Data JPA）\n- application.ymlにJPA・PostgreSQL接続設定を追加\n\n## 完了条件\n\n- [ ] User.javaがusersテーブルの全カラムをマッピングしている\n- [ ] CloudAccess.javaがcloud_accessテーブルの全カラムをマッピングしている\n- [ ] UserRepositoryがSpring Data JPAのCrudRepositoryを継承している\n- [ ] Spring Boot起動時にDB接続が成功する\n\n## 技術的な注意点\n\n- JPA 注意: エンティティの関連は@OneToMany/@ManyToOneで定義\n- User → CloudAccess: @OneToMany(mappedBy=\"user\")\n- CloudAccess → User: @ManyToOne + @JoinColumn(name=\"user_id\")\n\n## 依存関係\n\n- **前提（これが必要）**: task-1-2-1\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/db.md\n- ai_generated/requirements/file_structure.md",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-2-1-1",
+    "parent_id": "pbi-2-1",
+    "title": "Task 2.1.1: KeyCloakレルム設定（realm-export.json）を作成する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- output_system/keycloak/realm-export.json を作成\n- レルム名を設定（例: paas-management）\n- OIDCクライアントを登録（Next.jsアプリ用）\n  - クライアントID: paas-management-app\n  - アクセスタイプ: confidential\n  - リダイレクトURI: フロントエンドURL/api/auth/callback/keycloak\n  - WebOrigins設定\n- Admin APIクライアントを登録（BFFからのロール同期用）\n  - クライアントID: paas-management-admin\n  - サービスアカウント有効\n  - realm-management ロール付与\n- テストユーザーを作成（シードデータのユーザーと対応）\n  - 管理者1名、一般社員3名\n- docker-compose.ymlにレルムインポート設定を追加\n\n## 完了条件\n\n- [ ] realm-export.json が存在し、有効なJSON形式である\n- [ ] OIDCクライアント（paas-management-app）が定義されている\n- [ ] Admin APIクライアント（paas-management-admin）が定義されている\n- [ ] テストユーザーがシードデータと対応して定義されている\n- [ ] KeyCloak起動時にレルムが自動インポートされる\n\n## 技術的な注意点\n\n- KeyCloakのバージョンによりrealm-export.jsonの形式が異なる場合がある\n- セッションタイムアウトは8時間（28800秒）に設定\n- テストユーザーのパスワードは簡易的なもの（開発用）\n\n## 依存関係\n\n- **前提（これが必要）**: task-1-1-3\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/architecture.md（ログインフローシーケンス図）\n- ai_generated/requirements/devops.md（KeyCloak環境変数）",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-2-1-2",
+    "parent_id": "pbi-2-1",
+    "title": "Task 2.1.2: NextAuth.jsでKeyCloakプロバイダーを設定する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- next-authパッケージをインストール\n- src/app/api/auth/[...nextauth]/route.ts を作成\n  - KeyCloakプロバイダーを設定（OIDC Authorization Code Flow）\n  - セッションストラテジー: jwt\n  - callbacksでJWTトークンにアクセストークン・リフレッシュトークンを保持\n  - トークンリフレッシュロジックを実装\n- src/lib/auth.ts にNextAuth設定をエクスポート\n- src/app/api/auth/session/route.ts でセッション情報取得エンドポイントを実装\n- 環境変数: NEXTAUTH_URL, NEXTAUTH_SECRET, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ISSUER\n\n## 完了条件\n\n- [ ] NextAuth.jsがKeyCloakプロバイダーで動作する\n- [ ] 未認証ユーザーがKeyCloakログイン画面にリダイレクトされる\n- [ ] KeyCloakで認証後、セッションが確立される\n- [ ] JWTトークンの自動リフレッシュが動作する\n- [ ] セッションタイムアウトが8時間で設定されている\n\n## 技術的な注意点\n\n- App RouterのRoute Handlers形式で実装\n- トークンリフレッシュはNextAuth.jsのjwt callbackで実装\n- アクセストークンの有効期限切れ時に自動でリフレッシュ\n- セッション情報にis_admin（管理者フラグ）を含める\n\n## 依存関係\n\n- **前提（これが必要）**: task-2-1-1\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/architecture.md（ログインフローシーケンス図）\n- ai_generated/requirements/api.md（BFF API定義）",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-2-1-3",
+    "parent_id": "pbi-2-1",
+    "title": "Task 2.1.3: ログイン画面を作成する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- src/app/login/page.tsx を作成\n  - 「PaaS管理システム」ヘッダー表示\n  - 「KeyCloakでログイン」ボタン表示\n  - ボタンクリックでNextAuth.jsのsignIn('keycloak')を呼び出し\n- src/app/page.tsx でトップページからのリダイレクト（認証済み→適切な画面、未認証→/login）\n\n## 完了条件\n\n- [ ] /login にアクセスするとログイン画面が表示される\n- [ ] 「KeyCloakでログイン」ボタンが表示される\n- [ ] ボタンクリックでKeyCloakのログイン画面にリダイレクトされる\n- [ ] / にアクセスすると認証状態に応じて適切にリダイレクトされる\n\n## 技術的な注意点\n\n- shadcn/ui の Button コンポーネントを使用\n- Tailwind CSSでスタイリング\n- screens.mdのログイン画面ワイヤーフレームに準拠\n\n## 依存関係\n\n- **前提（これが必要）**: task-2-1-2\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/screens.md（ログイン画面ワイヤーフレーム）",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-2-2-1",
+    "parent_id": "pbi-2-2",
+    "title": "Task 2.2.1: 認証ミドルウェアとロール判定ロジックを実装する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- Next.jsのミドルウェア（middleware.ts）を作成\n  - 未認証ユーザーを/loginにリダイレクト\n  - /admin/配下へのアクセスは管理者（is_admin=true）のみ許可\n  - 一般社員が/admin/配下にアクセスした場合は/my-accessにリダイレクト\n- ログイン後のリダイレクト先をロールに応じて設定\n  - 管理者: /admin/users\n  - 一般社員: /my-access\n- セッションからis_adminフラグを取得するロジックを実装\n\n## 完了条件\n\n- [ ] 未認証ユーザーが/loginにリダイレクトされる\n- [ ] 管理者ログイン後、/admin/usersにリダイレクトされる\n- [ ] 一般社員ログイン後、/my-accessにリダイレクトされる\n- [ ] 一般社員が/admin/配下にアクセスすると拒否される\n- [ ] ミドルウェアがApp Router形式で動作する\n\n## 技術的な注意点\n\n- is_adminフラグはセッション（JWT）から取得\n- ミドルウェアはEdge Runtimeで動作するため、使用可能なAPIに制限あり\n- NextAuth.jsのauthorized callbackと連携\n\n## 依存関係\n\n- **前提（これが必要）**: task-2-1-2\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/screens.md（画面遷移図）\n- ai_generated/requirements/README.md（ユーザーロール定義）",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-2-2-2",
+    "parent_id": "pbi-2-2",
+    "title": "Task 2.2.2: 共通レイアウトとヘッダー（ログアウト機能付き）を実装する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- src/app/layout.tsx ルートレイアウトを実装\n- src/components/layout/header.tsx を作成\n  - 「PaaS管理システム」タイトル表示\n  - ログインユーザー名表示\n  - ログアウトボタン（NextAuth.jsのsignOut呼び出し）\n- src/components/layout/main-layout.tsx を作成（ヘッダー＋メインコンテンツ）\n- ログアウト処理: NextAuth.jsのsignOut + KeyCloakセッション破棄\n\n## 完了条件\n\n- [ ] ヘッダーに「PaaS管理システム」が表示される\n- [ ] ヘッダーにログインユーザー名が表示される\n- [ ] ログアウトボタンが機能し、セッションが破棄される\n- [ ] ログアウト後、/loginにリダイレクトされる\n- [ ] KeyCloakセッションも含めて完全にログアウトされる\n\n## 技術的な注意点\n\n- shadcn/ui のコンポーネントを使用\n- screens.mdのヘッダーワイヤーフレームに準拠\n- KeyCloakのログアウトエンドポイントも呼び出す（完全ログアウト）\n\n## 依存関係\n\n- **前提（これが必要）**: task-2-2-1\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/screens.md（各画面のヘッダー定義）",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-3-1-1",
+    "parent_id": "pbi-3-1",
+    "title": "Task 3.1.1: バックエンドのユーザー一覧・検索APIを実装する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- UserController.java を実装\n  - GET /api/users: ユーザー一覧取得（全件、ページネーションなし）\n  - GET /api/users/search?q=xxx: ユーザー検索（社員ID・氏名・部署で部分一致）\n- UserService.java を実装\n  - findAll(): 全ユーザー取得（cloudAccess含む）\n  - search(keyword): キーワードで部分一致検索\n- UserRepository.java に検索メソッドを追加\n  - @Query で LIKE 検索（employee_id, name, department）\n- UserResponse.java DTOを実装（id, employeeId, name, email, department, position, isAdmin, cloudAccess）\n- CloudAccessResponse.java DTOを実装（id, cloudProvider, isEnabled）\n- OpenApiConfig.java を設定（springdoc-openapi）\n\n## 完了条件\n\n- [ ] GET /api/users が全ユーザーをcloudAccess付きで返す\n- [ ] GET /api/users/search?q=xxx が部分一致検索結果を返す\n- [ ] レスポンスがapi.mdのOpenAPI定義に準拠している\n- [ ] springdoc-openapiのSwagger UIでAPI仕様を確認できる\n- [ ] ユニットテスト（UserServiceTest.java）が通る\n\n## 技術的な注意点\n\n- Cloud利用可否（cloudAccess）はUserResponseに含めて返す\n- 検索はOR条件（社員ID OR 氏名 OR 部署で部分一致）\n- JPA N+1問題に注意: fetch joinまたは@EntityGraphを使用\n\n## 依存関係\n\n- **前提（これが必要）**: task-1-2-3\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/api.md（OpenAPI定義）\n- ai_generated/requirements/db.md",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-3-1-2",
+    "parent_id": "pbi-3-1",
+    "title": "Task 3.1.2: BFFのAPIプロキシを実装する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- src/app/api/proxy/[...path]/route.ts を作成\n  - フロントエンドからの全APIリクエストをSpring MVCバックエンドに中継\n  - リクエストヘッダーにアクセストークンを付与\n  - セッション検証（未認証の場合は401を返す）\n- src/lib/api-client.ts を作成\n  - フロントエンドからBFFプロキシを呼び出すクライアント\n  - fetch wrapper（認証ヘッダー自動付与）\n- 環境変数 BACKEND_URL でバックエンドURLを設定\n\n## 完了条件\n\n- [ ] /api/proxy/users へのGETリクエストがバックエンドの/api/usersに中継される\n- [ ] /api/proxy/users/search?q=xxx がバックエンドに中継される\n- [ ] アクセストークンがリクエストヘッダーに付与される\n- [ ] 未認証の場合は401エラーを返す\n- [ ] api-client.ts からBFFプロキシを呼び出せる\n\n## 技術的な注意点\n\n- App RouterのRoute Handlers形式で実装\n- バックエンドURLはコンテナ名で指定（instance-config.md参照）\n- エラーハンドリング: バックエンド接続失敗時に適切なエラーレスポンスを返す\n\n## 依存関係\n\n- **前提（これが必要）**: task-2-1-2\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/api.md（BFF API定義）\n- ai_generated/requirements/architecture.md",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-3-1-3",
+    "parent_id": "pbi-3-1",
+    "title": "Task 3.1.3: ユーザー一覧画面（検索機能付き）を実装する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- src/app/admin/users/page.tsx を作成（ユーザー一覧画面）\n- src/components/users/user-table.tsx を作成\n  - テーブル表示: 社員ID | 氏名 | 部署 | AWS | GCP | Azure\n  - Cloud利用可否を視覚的に表示（可: 緑、不可: 赤など）\n  - ユーザー行クリックで詳細画面（/admin/users/[id]）に遷移\n- src/components/users/user-search.tsx を作成\n  - 検索バー: キーワード入力で即時検索（debounce適用）\n  - プレースホルダー: 「社員ID / 氏名 / 部署で検索」\n- api-client.ts を使用してBFFプロキシ経由でデータ取得\n\n## 完了条件\n\n- [ ] /admin/users にアクセスするとユーザー一覧が表示される\n- [ ] テーブルに社員ID・氏名・部署・AWS/GCP/Azure利用可否が表示される\n- [ ] 検索バーでキーワード入力すると検索結果に絞り込まれる\n- [ ] ユーザー行クリックで/admin/users/[id]に遷移する\n- [ ] 画面表示が3秒以内に完了する\n\n## 技術的な注意点\n\n- shadcn/ui の Table, Input コンポーネントを使用\n- 検索はdebounce（300ms）を適用して不要なAPIコールを防ぐ\n- screens.mdのユーザー一覧画面ワイヤーフレームに準拠\n\n## 依存関係\n\n- **前提（これが必要）**: task-3-1-1, task-3-1-2\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/screens.md（ユーザー一覧画面ワイヤーフレーム）",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-3-2-1",
+    "parent_id": "pbi-3-2",
+    "title": "Task 3.2.1: バックエンドのユーザー詳細取得・Cloud利用可否更新APIを実装する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- UserController.java にエンドポイントを追加\n  - GET /api/users/{id}: ユーザー詳細取得（cloudAccess含む）\n  - PUT /api/users/{id}/cloud-access: Cloud利用可否更新\n- UserService.java にメソッドを追加\n  - findById(id): ユーザー詳細取得\n  - updateCloudAccess(id, request): Cloud利用可否更新\n- CloudAccessUpdateRequest.java DTOを実装\n  - cloudAccess: [{cloudProvider: \"AWS\", isEnabled: true}, ...]\n- UserControllerTest.java ユニットテストを作成\n\n## 完了条件\n\n- [ ] GET /api/users/{id} がユーザー詳細をcloudAccess付きで返す\n- [ ] PUT /api/users/{id}/cloud-access でCloud利用可否を更新できる\n- [ ] 存在しないユーザーIDの場合は404を返す\n- [ ] レスポンスがapi.mdのOpenAPI定義に準拠している\n- [ ] ユニットテスト（UserControllerTest.java）が通る\n\n## 技術的な注意点\n\n- 更新はトランザクション管理（@Transactional）\n- 楽観的ロックは不要（管理者単独操作の想定）\n- リクエストバリデーション（cloudProviderはAWS/GCP/Azureのいずれか）\n\n## 依存関係\n\n- **前提（これが必要）**: task-3-1-1\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/api.md（OpenAPI定義）",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-3-2-2",
+    "parent_id": "pbi-3-2",
+    "title": "Task 3.2.2: KeyCloak Admin APIクライアントを実装し、ロール同期を行う",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- src/lib/keycloak-admin.ts を作成\n  - KeyCloak Admin APIクライアント（サービスアカウント認証）\n  - ユーザーのロール/グループを取得・更新するメソッド\n  - Cloud利用可否変更時にKeyCloakのロール/グループを同期\n- BFFのAPIプロキシを拡張\n  - PUT /api/proxy/users/{id}/cloud-access のレスポンス後にKeyCloak同期を実行\n- 環境変数: KEYCLOAK_ADMIN_URL, KEYCLOAK_ADMIN_CLIENT_ID, KEYCLOAK_ADMIN_CLIENT_SECRET\n\n## 完了条件\n\n- [ ] KeyCloak Admin APIクライアントがサービスアカウントで認証できる\n- [ ] Cloud利用可否変更時にKeyCloakのロール/グループが同期される\n- [ ] KeyCloak同期失敗時に適切なエラーハンドリングが行われる\n- [ ] 同期結果がログに記録される\n\n## 技術的な注意点\n\n- KeyCloak Admin APIはBFFレイヤーで呼び出す（バックエンドからではない）\n- サービスアカウント認証のトークンキャッシュを実装\n- KeyCloak同期失敗時もDB更新は成功とする（最終的整合性）\n- エラー時はリトライではなくログ記録（運用で対応）\n\n## 依存関係\n\n- **前提（これが必要）**: task-2-1-1, task-3-2-1\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/architecture.md（アクセス権変更フローシーケンス図）\n- ai_generated/requirements/devops.md（KeyCloak環境変数）",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-3-2-3",
+    "parent_id": "pbi-3-2",
+    "title": "Task 3.2.3: ユーザー詳細画面（Cloud利用可否トグル編集）を実装する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- src/app/admin/users/[id]/page.tsx を作成（ユーザー詳細画面）\n  - ユーザー情報表示: 社員ID、氏名、メール、部署、役職\n  - Cloud利用可否トグルスイッチ: AWS、GCP、Azure\n  - 保存ボタン: トグル変更をAPIに送信\n  - 「← ユーザー一覧に戻る」リンク\n- src/components/users/cloud-access-toggle.tsx を作成\n  - トグルスイッチコンポーネント（Cloud種別ラベル + Switch）\n- 保存成功時にトースト通知を表示\n- 保存中はボタンをローディング状態にする\n\n## 完了条件\n\n- [ ] /admin/users/[id] にアクセスするとユーザー詳細が表示される\n- [ ] AWS/GCP/Azureのトグルスイッチが現在の状態を反映して表示される\n- [ ] トグルを切り替えて保存するとAPIが呼び出され更新される\n- [ ] 「ユーザー一覧に戻る」リンクが/admin/usersに遷移する\n- [ ] 保存成功時にトースト通知が表示される\n\n## 技術的な注意点\n\n- shadcn/ui の Switch, Button, Card, Toast コンポーネントを使用\n- screens.mdのユーザー詳細画面ワイヤーフレームに準拠\n- 楽観的UI更新は不要（保存ボタン押下で確定）\n\n## 依存関係\n\n- **前提（これが必要）**: task-3-1-3, task-3-2-2\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/screens.md（ユーザー詳細画面ワイヤーフレーム）",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-3-3-1",
+    "parent_id": "pbi-3-3",
+    "title": "Task 3.3.1: バックエンドの自分の情報・Cloud利用可否取得APIを実装する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- UserController.java にエンドポイントを追加\n  - GET /api/users/me: 自分のユーザー情報取得（セッションのemployee_idで検索）\n  - GET /api/users/me/cloud-access: 自分のCloud利用可否取得\n- UserService.java にメソッドを追加\n  - findByEmployeeId(employeeId): 社員IDでユーザー検索\n- BFFプロキシでセッションから社員IDを取得し、リクエストヘッダーに付与\n\n## 完了条件\n\n- [ ] GET /api/users/me が認証ユーザー自身の情報を返す\n- [ ] GET /api/users/me/cloud-access が認証ユーザーのCloud利用可否を返す\n- [ ] レスポンスがapi.mdのOpenAPI定義に準拠している\n- [ ] ユニットテストが通る\n\n## 技術的な注意点\n\n- /api/users/me は全ユーザー（管理者・一般社員）がアクセス可能\n- BFFプロキシでセッションのユーザー情報をバックエンドに渡す方法を決定（ヘッダー or クエリパラメータ）\n- /api/users/me と /api/users/{id} のルーティング競合に注意\n\n## 依存関係\n\n- **前提（これが必要）**: task-3-1-1, task-3-1-2\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/api.md（OpenAPI定義）",
+    "labels": [
+      "task"
+    ]
+  },
+  {
+    "type": "task",
+    "id": "task-3-3-2",
+    "parent_id": "pbi-3-3",
+    "title": "Task 3.3.2: マイアクセス画面を実装する",
+    "body": "## 親PBI\n\n（Issue登録後にTasklistで設定）\n\n## 作業内容\n\n- src/app/my-access/page.tsx を作成（マイアクセス画面）\n  - タイトル: 「マイアクセス状況」\n  - AWS/GCP/Azureの利用可否をカード形式で表示\n- src/components/my-access/access-status-card.tsx を作成\n  - Cloud種別名、利用可否状態（利用可/利用不可）を表示\n  - 利用可: 緑のアイコン/背景、利用不可: 赤/グレーのアイコン/背景\n- api-client.ts を使用してBFFプロキシ経由でデータ取得\n\n## 完了条件\n\n- [ ] /my-access にアクセスするとマイアクセス画面が表示される\n- [ ] AWS/GCP/Azureの利用可否がカード形式で表示される\n- [ ] 利用可/利用不可が視覚的に区別できる（色分け）\n- [ ] 画面表示が3秒以内に完了する\n\n## 技術的な注意点\n\n- shadcn/ui の Card コンポーネントを使用\n- Tailwind CSSで利用可/不可の色分けを実装\n- screens.mdのマイアクセス画面ワイヤーフレームに準拠\n- 一般社員がアクセスする画面のため、編集機能は不要\n\n## 依存関係\n\n- **前提（これが必要）**: task-3-3-1\n- **ブロッカー**: なし\n\n## 参考資料\n\n- ai_generated/requirements/screens.md（マイアクセス画面ワイヤーフレーム）",
+    "labels": [
+      "task"
+    ]
+  }
+]

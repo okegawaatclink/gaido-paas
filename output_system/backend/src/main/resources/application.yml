@@ -40,7 +40,7 @@ spring:
 
 # サーバーポート設定
 server:
-  port: 3002
+  port: 3004
 
 # springdoc-openapi設定: OpenAPI仕様書のエンドポイント
 springdoc:

@@ -11,8 +11,8 @@
  * 5. バックエンドのレスポンスをそのままクライアントに返す
  *
  * 例:
- * - GET /api/proxy/users → GET http://backend:3002/api/users
- * - GET /api/proxy/users/search?q=xxx → GET http://backend:3002/api/users/search?q=xxx
+ * - GET /api/proxy/users → GET http://backend:3004/api/users
+ * - GET /api/proxy/users/search?q=xxx → GET http://backend:3004/api/users/search?q=xxx
  *
  * セキュリティ:
  * - 未認証（セッションなし）の場合は401を返す

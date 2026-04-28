@@ -1,0 +1,18 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]: PaaS管理ポータル
+  - main [ref=e6]:
+    - heading "Sign in to your account" [level=1] [ref=e8]
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e15]: Username or email
+        - textbox "Username or email" [active] [ref=e17]
+      - generic [ref=e18]:
+        - generic [ref=e20]: Password
+        - generic [ref=e21]:
+          - textbox "Password" [ref=e24]
+          - button "Show password" [ref=e26] [cursor=pointer]:
+            - generic [ref=e27]: 
+        - link "Forgot Password?" [ref=e32] [cursor=pointer]:
+          - /url: /realms/paas/login-actions/reset-credentials?client_id=paas-frontend&tab_id=RDXMzbl00ZI&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMS9hcGkvYXV0aC9jYWxsYmFjay9rZXljbG9hayIsInJ0IjoiY29kZSIsInN0IjoiUGoyOHhLcFAzVWRsWXNQTmFzMkdJTG9EXzFObGZHZmlqSkxSTWJiZmFLdyJ9
+      - button "Sign In" [ref=e35] [cursor=pointer]

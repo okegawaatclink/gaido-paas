@@ -24,12 +24,12 @@
       "clientAuthenticatorType": "client-secret",
       "secret": "paas-frontend-secret",
       "redirectUris": [
-        "http://localhost:3001/*",
-        "http://okegawaatclink-gaido-paas-output-system:3001/*"
+        "http://localhost:3003/*",
+        "http://okegawaatclink-gaido-paas-output-system:3003/*"
       ],
       "webOrigins": [
-        "http://localhost:3001",
-        "http://okegawaatclink-gaido-paas-output-system:3001"
+        "http://localhost:3003",
+        "http://okegawaatclink-gaido-paas-output-system:3003"
       ],
       "protocol": "openid-connect",
       "publicClient": false,

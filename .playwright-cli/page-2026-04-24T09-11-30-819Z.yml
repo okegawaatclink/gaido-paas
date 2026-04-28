@@ -1,0 +1,23 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]: PaaS管理ポータル
+  - main [ref=e6]:
+    - heading "Sign in to your account" [level=1] [ref=e8]
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e15]: Username or email
+        - generic [ref=e16]:
+          - textbox "Username or email" [active] [ref=e17]: tanaka.admin
+          - generic:
+            - generic:
+              - generic: 
+        - generic [ref=e22]: Invalid username or password.
+      - generic [ref=e23]:
+        - generic [ref=e25]: Password
+        - generic [ref=e26]:
+          - textbox "Password" [ref=e29]
+          - button "Show password" [ref=e31] [cursor=pointer]:
+            - generic [ref=e32]: 
+        - link "Forgot Password?" [ref=e37] [cursor=pointer]:
+          - /url: /realms/paas/login-actions/reset-credentials?client_id=paas-frontend&tab_id=7HXTK8BcUnI&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMS9hcGkvYXV0aC9jYWxsYmFjay9rZXljbG9hayIsInJ0IjoiY29kZSIsInN0IjoiM0FobWZxUjRFRHgtY2VOcmc3SndlcDFZVS1DUXIyLTlBWXlZZWhQOXJQZyJ9
+      - button "Sign In" [ref=e40] [cursor=pointer]

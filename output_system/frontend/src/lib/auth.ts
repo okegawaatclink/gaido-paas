@@ -11,7 +11,8 @@
 
 import type { NextAuthOptions, Account } from "next-auth";
 import type { JWT } from "next-auth/jwt";
-import KeycloakProvider from "next-auth/providers/keycloak";
+// KeycloakProviderはコンテナ内/外のURL差異に対応できないため、
+// カスタムOAuthプロバイダーとして定義する
 
 /**
  * KeyCloakのトークンエンドポイントに対してリフレッシュリクエストを送信し、
@@ -76,11 +77,42 @@ async function refreshAccessToken(refreshToken: string): Promise<{
  */
 export const authOptions: NextAuthOptions = {
   providers: [
-    KeycloakProvider({
+    // KeyCloakプロバイダー設定（カスタムOAuth）
+    // Docker環境ではコンテナ間通信（サーバーサイド）とブラウザアクセスでURLが異なる:
+    //   サーバーサイド: http://keycloak:8080（コンテナ名で通信）
+    //   ブラウザ側: http://localhost:8081（ホストポート経由）
+    // wellKnownを使うとディスカバリ結果がauthorizationを上書きしてしまうため、
+    // 全エンドポイントを明示的に指定する
+    {
+      id: "keycloak",
+      name: "KeyCloak",
+      type: "oauth",
       clientId: process.env.KEYCLOAK_CLIENT_ID!,
       clientSecret: process.env.KEYCLOAK_CLIENT_SECRET!,
-      issuer: process.env.KEYCLOAK_ISSUER!,
-    }),
+      idToken: true,
+      // authorization: ブラウザがリダイレクトされるURL → KEYCLOAK_ISSUER_EXTERNAL（localhost経由）
+      authorization: {
+        url: `${process.env.KEYCLOAK_ISSUER_EXTERNAL ?? process.env.KEYCLOAK_ISSUER!}/protocol/openid-connect/auth`,
+        params: { scope: "openid email profile" },
+      },
+      // token/userinfo/jwks: サーバーサイドで呼ぶURL → KEYCLOAK_ISSUER（コンテナ間通信）
+      token: `${process.env.KEYCLOAK_ISSUER!}/protocol/openid-connect/token`,
+      userinfo: `${process.env.KEYCLOAK_ISSUER!}/protocol/openid-connect/userinfo`,
+      // jwks_endpoint: IDトークンの署名検証に使用するJWKS URI（サーバーサイド）
+      jwks_endpoint: `${process.env.KEYCLOAK_ISSUER!}/protocol/openid-connect/certs`,
+      // issuer: IDトークン検証時のiss値
+      // KeyCloakはブラウザがアクセスしたURLをIDトークンのiss claimに使用するため、
+      // KEYCLOAK_ISSUER_EXTERNAL（localhost経由）と一致させる
+      issuer: process.env.KEYCLOAK_ISSUER_EXTERNAL ?? process.env.KEYCLOAK_ISSUER!,
+      checks: ["state"],
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name ?? profile.preferred_username,
+          email: profile.email,
+        };
+      },
+    },
   ],
 
   session: {

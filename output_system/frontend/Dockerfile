@@ -117,9 +117,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 USER nextjs
 
 # ポート設定: instance-config.mdのフロントエンドホストポートに対応
-EXPOSE 3001
+EXPOSE 3003
 
-ENV PORT=3001
+ENV PORT=3003
 ENV HOSTNAME="0.0.0.0"
 
 # NODE_EXTRA_CA_CERTS: Node.jsランタイムでカスタムCA証明書を信頼

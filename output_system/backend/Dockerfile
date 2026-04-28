@@ -104,7 +104,7 @@ COPY --from=builder --chown=spring:spring /app/target/*.jar app.jar
 USER spring
 
 # ポート設定: instance-config.mdのバックエンドホストポートに対応
-EXPOSE 3002
+EXPOSE 3004
 
 # JVMオプション:
 # - server: サーバー最適化JITを有効化

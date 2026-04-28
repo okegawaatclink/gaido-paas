@@ -1,0 +1,15 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]: PaaS管理ポータル
+  - main [ref=e6]:
+    - heading "Forgot Your Password?" [level=1] [ref=e8]
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - generic [ref=e13]: Username or email
+          - textbox "Username or email" [active] [ref=e15]: tanaka.admin
+        - generic [ref=e17]:
+          - button "Submit" [ref=e18] [cursor=pointer]
+          - link "« Back to Login" [ref=e19] [cursor=pointer]:
+            - /url: /realms/paas/login-actions/authenticate?client_id=paas-frontend&tab_id=7HXTK8BcUnI&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMS9hcGkvYXV0aC9jYWxsYmFjay9rZXljbG9hayIsInJ0IjoiY29kZSIsInN0IjoiM0FobWZxUjRFRHgtY2VOcmc3SndlcDFZVS1DUXIyLTlBWXlZZWhQOXJQZyJ9
+      - generic [ref=e22]: Enter your username or email address and we will send you instructions on how to create a new password.

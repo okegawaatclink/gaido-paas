@@ -14,8 +14,8 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>Swagger UIには以下のURLでアクセス可能:</p>
  * <ul>
- *   <li>Swagger UI: http://localhost:3002/swagger-ui/index.html</li>
- *   <li>OpenAPI JSON: http://localhost:3002/v3/api-docs</li>
+ *   <li>Swagger UI: http://localhost:3004/swagger-ui/index.html</li>
+ *   <li>OpenAPI JSON: http://localhost:3004/v3/api-docs</li>
  * </ul>
  *
  * <p>SecurityConfig.javaの設定により、/v3/api-docs/** と /swagger-ui/** は

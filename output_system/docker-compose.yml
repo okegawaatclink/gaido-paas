@@ -13,7 +13,7 @@ services:
 
   # ==========================================================================
   # frontend: Next.js App Router + BFF
-  # - ポート: 3001 (instance-config.mdのフロントエンドホストポート)
+  # - ポート: 3003 (instance-config.mdのフロントエンドホストポート)
   # - コンテナ名: okegawaatclink-gaido-paas-output-system (instance-config.md準拠)
   # ==========================================================================
   frontend:
@@ -24,19 +24,21 @@ services:
       context: ..
       dockerfile: output_system/frontend/Dockerfile
     ports:
-      - "3001:3001"
+      - "3003:3003"
     environment:
       # NextAuth.js設定
       # NEXTAUTH_URLはフロントエンドの公開URL（ブラウザからアクセス可能なURL）
-      - NEXTAUTH_URL=http://localhost:3001
+      - NEXTAUTH_URL=http://localhost:3003
       - NEXTAUTH_SECRET=paas-nextauth-secret-change-in-production
       # KeyCloak OIDC設定
-      # KEYCLOAK_ISSUERはコンテナ間通信のためコンテナ名で指定
+      # KEYCLOAK_ISSUERはコンテナ間通信のためコンテナ名で指定（サーバーサイドディスカバリ用）
       - KEYCLOAK_ISSUER=http://keycloak:8080/realms/paas
+      # KEYCLOAK_ISSUER_EXTERNALはブラウザからアクセスするURL（ログイン画面リダイレクト用）
+      - KEYCLOAK_ISSUER_EXTERNAL=http://localhost:8081/realms/paas
       - KEYCLOAK_CLIENT_ID=paas-frontend
       - KEYCLOAK_CLIENT_SECRET=paas-frontend-secret
       # バックエンドAPI URL（コンテナ間通信）
-      - BACKEND_URL=http://okegawaatclink-gaido-paas-output-system-backend:3002
+      - BACKEND_URL=http://okegawaatclink-gaido-paas-output-system-backend:3004
       # KeyCloak Admin API設定
       # paas-management-adminクライアント（サービスアカウント有効、realm-management権限付与）
       - KEYCLOAK_ADMIN_URL=http://keycloak:8080
@@ -57,7 +59,7 @@ services:
 
   # ==========================================================================
   # backend: Spring MVC (Java 21) REST API
-  # - ポート: 3002 (instance-config.mdのバックエンドホストポート)
+  # - ポート: 3004 (instance-config.mdのバックエンドホストポート)
   # - コンテナ名: okegawaatclink-gaido-paas-output-system-backend (instance-config.md準拠)
   # ==========================================================================
   backend:
@@ -67,7 +69,7 @@ services:
       context: ..
       dockerfile: output_system/backend/Dockerfile
     ports:
-      - "3002:3002"
+      - "3004:3004"
     environment:
       # PostgreSQL接続設定
       # サービス名「postgres」でコンテナ間通信
@@ -82,7 +84,7 @@ services:
         condition: service_healthy
     healthcheck:
       # Spring Bootのアクチュエーターヘルスエンドポイントで確認
-      test: ["CMD", "curl", "-f", "http://localhost:3002/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3004/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5

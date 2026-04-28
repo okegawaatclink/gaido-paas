@@ -46,7 +46,7 @@ export async function GET(request: Request) {
   // post_logout_redirect_uri: ログアウト後のリダイレクト先
   // KEYCLOAK_ISSUER 例: http://keycloak:8080/realms/paas
   // フロントエンドのURLは環境変数 NEXTAUTH_URL から取得
-  const nextauthUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3001";
+  const nextauthUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3003";
   keycloakLogoutUrl.searchParams.set(
     "post_logout_redirect_uri",
     `${nextauthUrl}/login`
